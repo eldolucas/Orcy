@@ -42,7 +42,6 @@ export function Sidebar({ activeSection, onSectionChange, isCollapsed, onToggleC
   const menuItems = [
     { id: 'companies', label: 'Empresas', icon: Building },
     { id: 'business-groups', label: 'Grupos Empresariais', icon: GitBranch },
-    { id: 'business-groups', label: 'Grupos Empresariais', icon: GitBranch },
     { id: 'cost-centers', label: 'Centros de Custo', icon: Building2 },
     { id: 'insumos', label: 'Insumos', icon: Package },
     { id: 'labor-budget', label: 'Mão de Obra Orçada', icon: Users },

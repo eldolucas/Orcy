@@ -72,8 +72,6 @@ function AppContent() {
         return <CompaniesPage />;
       case 'business-groups':
         return <BusinessGroupsPage />;
-      case 'business-groups':
-        return <BusinessGroupsPage />;
       case 'cost-centers':
         return <CostCenters />;
       case 'insumos':
