@@ -21,35 +21,35 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // Mock users for demo
 const mockUsers: User[] = [
   {
-    id: '1',
+    id: '550e8400-e29b-41d4-a716-446655440101',
     email: 'admin@empresa.com',
     name: 'João Silva',
     role: 'admin',
     department: 'TI',
-    companyId: '1',
-    companies: ['1', '2'],
+    companyId: '550e8400-e29b-41d4-a716-446655440001',
+    companies: ['550e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440002'],
     avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
     createdAt: '2023-01-01'
   },
   {
-    id: '2',
+    id: '550e8400-e29b-41d4-a716-446655440102',
     email: 'gestor@empresa.com',
     name: 'Maria Santos',
     role: 'manager',
     department: 'Financeiro',
-    companyId: '1',
-    companies: ['1'],
+    companyId: '550e8400-e29b-41d4-a716-446655440001',
+    companies: ['550e8400-e29b-41d4-a716-446655440001'],
     avatar: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
     createdAt: '2023-01-01'
   },
   {
-    id: '3',
+    id: '550e8400-e29b-41d4-a716-446655440103',
     email: 'usuario@empresa.com',
     name: 'Pedro Costa',
     role: 'user',
     department: 'Marketing',
-    companyId: '2',
-    companies: ['2'],
+    companyId: '550e8400-e29b-41d4-a716-446655440002',
+    companies: ['550e8400-e29b-41d4-a716-446655440002'],
     avatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
     createdAt: '2023-01-01'
   }
@@ -58,15 +58,15 @@ const mockUsers: User[] = [
 // Mock companies for demo
 const mockCompanies: CompanyInfo[] = [
   {
-    id: '1',
+    id: '550e8400-e29b-41d4-a716-446655440001',
     name: 'Empresa Modelo Ltda'
   },
   {
-    id: '2',
+    id: '550e8400-e29b-41d4-a716-446655440002',
     name: 'Tecnologia Avançada S.A.'
   },
   {
-    id: '3',
+    id: '550e8400-e29b-41d4-a716-446655440003',
     name: 'Indústria Nacional de Produtos Ltda'
   }
 ];
