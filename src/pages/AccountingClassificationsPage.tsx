@@ -1,34 +1,42 @@
 import React, { useState } from 'react';
-import { Plus, Search, Filter, Tag, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, Search, Tag, CheckCircle, XCircle } from 'lucide-react';
 import { AccountingClassificationCard } from '../components/AccountingClassifications/AccountingClassificationCard';
 import { AccountingClassificationForm } from '../components/AccountingClassifications/AccountingClassificationForm';
 import { useAccountingClassifications } from '../hooks/useAccountingClassifications';
-import { AccountingClassification, accountingTypeLabels } from '../types/accountingClassification';
+import {
+  AccountingClassification,
+  AccountingClassificationFormData,
+  accountingTypeLabels
+} from '../types/accountingClassification';
+
+// Tipos dos filtros (sem mágicas de string)
+type TypeFilter = 'all' | keyof typeof accountingTypeLabels;
+type StatusFilter = 'all' | 'active' | 'inactive';
 
 export function AccountingClassificationsPage() {
-  const { 
-    accountingClassifications, 
-    isLoading, 
+  const {
+    accountingClassifications,
+    isLoading,
     error,
-    addAccountingClassification, 
-    updateAccountingClassification, 
-    deleteAccountingClassification, 
-    getFilteredAccountingClassifications 
+    addAccountingClassification,
+    updateAccountingClassification,
+    deleteAccountingClassification,
+    getFilteredAccountingClassifications
   } = useAccountingClassifications();
-  
-  const [searchTerm, setSearchTerm] = useState('');
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [showCreateModal, setShowCreateModal] = useState(false);
+
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const [classificationToEdit, setClassificationToEdit] = useState<AccountingClassification | null>(null);
 
-  const handleCreateClassification = (classificationData: any) => {
+  const handleCreateClassification = (classificationData: AccountingClassificationFormData) => {
     addAccountingClassification(classificationData)
       .then(() => {
         setShowCreateModal(false);
       })
       .catch(() => {
-        // Error is handled in the hook and displayed in the UI
+        // Erro tratado no hook/UI
       });
   };
 
@@ -37,7 +45,7 @@ export function AccountingClassificationsPage() {
     setShowCreateModal(true);
   };
 
-  const handleUpdateClassification = (classificationData: any) => {
+  const handleUpdateClassification = (classificationData: AccountingClassificationFormData) => {
     if (classificationToEdit) {
       updateAccountingClassification(classificationToEdit.id, classificationData)
         .then(() => {
@@ -45,17 +53,20 @@ export function AccountingClassificationsPage() {
           setShowCreateModal(false);
         })
         .catch(() => {
-          // Error is handled in the hook and displayed in the UI
+          // Erro tratado no hook/UI
         });
     }
   };
 
   const handleDeleteClassification = (id: string) => {
-    if (window.confirm('Tem certeza que deseja excluir esta classificação contábil? Esta ação não pode ser desfeita.')) {
-      deleteAccountingClassification(id)
-        .catch(() => {
-          // Error is handled in the hook and displayed in the UI
-        });
+    if (
+      window.confirm(
+        'Tem certeza que deseja excluir esta classificação contábil? Esta ação não pode ser desfeita.'
+      )
+    ) {
+      deleteAccountingClassification(id).catch(() => {
+        // Erro tratado no hook/UI
+      });
     }
   };
 
@@ -64,25 +75,29 @@ export function AccountingClassificationsPage() {
     setClassificationToEdit(null);
   };
 
-  const filteredClassifications = getFilteredAccountingClassifications(searchTerm, typeFilter, statusFilter);
+  const filteredClassifications = getFilteredAccountingClassifications(
+    searchTerm,
+    typeFilter,
+    statusFilter
+  );
 
   // Estatísticas
   const totalClassifications = accountingClassifications.length;
-  const activeClassifications = accountingClassifications.filter(c => c.isActive).length;
-  const inactiveClassifications = accountingClassifications.filter(c => !c.isActive).length;
-  
+  const activeClassifications = accountingClassifications.filter((c) => c.isActive).length;
+  const inactiveClassifications = accountingClassifications.filter((c) => !c.isActive).length;
+
   // Contagem por tipo
-  const countByType: Record<string, number> = {
+  const countByType: Record<keyof typeof accountingTypeLabels, number> = {
     revenue: 0,
     expense: 0,
     asset: 0,
     liability: 0,
     equity: 0
   };
-  
-  accountingClassifications.forEach(c => {
-    if (countByType[c.type] !== undefined) {
-      countByType[c.type]++;
+
+  accountingClassifications.forEach((c) => {
+    if (c.type in countByType) {
+      countByType[c.type as keyof typeof accountingTypeLabels]++;
     }
   });
 
@@ -98,7 +113,7 @@ export function AccountingClassificationsPage() {
     return (
       <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
         <p>{error}</p>
-        <button 
+        <button
           className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
           onClick={() => window.location.reload()}
         >
@@ -117,7 +132,10 @@ export function AccountingClassificationsPage() {
           <p className="text-gray-600 mt-1">Gerencie as classificações contábeis do sistema</p>
         </div>
         <button
-          onClick={() => setShowCreateModal(true)}
+          onClick={() => {
+            setClassificationToEdit(null); // evita carregar dados antigos
+            setShowCreateModal(true);
+          }}
           className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
         >
           <Plus className="w-4 h-4" />
@@ -224,21 +242,23 @@ export function AccountingClassificationsPage() {
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
-        
+
         <select
           value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value)}
+          onChange={(e) => setTypeFilter(e.target.value as TypeFilter)}
           className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         >
           <option value="all">Todos os tipos</option>
           {Object.entries(accountingTypeLabels).map(([value, label]) => (
-            <option key={value} value={value}>{label}</option>
+            <option key={value} value={value}>
+              {label}
+            </option>
           ))}
         </select>
 
         <select
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
+          onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
           className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         >
           <option value="all">Todos os status</option>
@@ -266,8 +286,7 @@ export function AccountingClassificationsPage() {
           <p className="text-gray-500">
             {searchTerm || typeFilter !== 'all' || statusFilter !== 'all'
               ? 'Ajuste os filtros ou crie uma nova classificação'
-              : 'Crie sua primeira classificação contábil para começar'
-            }
+              : 'Crie sua primeira classificação contábil para começar'}
           </p>
         </div>
       )}
@@ -277,6 +296,7 @@ export function AccountingClassificationsPage() {
         isOpen={showCreateModal}
         onClose={handleCloseModal}
         onSave={classificationToEdit ? handleUpdateClassification : handleCreateClassification}
+        onDelete={deleteAccountingClassification} // Opção B plugada aqui
         initialData={classificationToEdit}
       />
     </div>
