@@ -38,27 +38,43 @@ export function Revenues() {
   const [revenueDetails, setRevenueDetails] = useState<Revenue | null>(null);
 
   const handleSaveRevenue = (revenueData: Omit<Revenue, 'id' | 'lastUpdated'> | Revenue) => {
-    if (revenueToEdit) {
-      // Editing existing revenue
-      updateRevenue(revenueToEdit.id, revenueData as Partial<Revenue>);
-    } else {
-      // Creating new revenue
-      addRevenue(revenueData as Omit<Revenue, 'id' | 'lastUpdated'>);
-    }
-    setShowCreateModal(false);
-    setRevenueToEdit(null);
+    const saveRevenue = async () => {
+      try {
+        if (revenueToEdit) {
+          // Editing existing revenue
+          await updateRevenue(revenueToEdit.id, revenueData as Partial<Revenue>);
+        } else {
+          // Creating new revenue
+          await addRevenue(revenueData as Omit<Revenue, 'id' | 'lastUpdated'>);
+        }
+        setShowCreateModal(false);
+        setRevenueToEdit(null);
+      } catch (err) {
+        // Error is handled in the hook and displayed in the UI
+      }
+    };
+    
+    saveRevenue();
   };
 
-  const handleConfirmRevenue = (id: string) => {
+  const handleConfirmRevenue = async (id: string) => {
     if (user && (user.role === 'admin' || user.role === 'manager')) {
-      confirmRevenue(id, user.name);
+      try {
+        await confirmRevenue(id, user.name);
+      } catch (err) {
+        alert(err instanceof Error ? err.message : 'Erro ao confirmar receita');
+      }
     }
   };
 
-  const handleCancelRevenue = (id: string) => {
+  const handleCancelRevenue = async (id: string) => {
     if (user && (user.role === 'admin' || user.role === 'manager')) {
       const reason = prompt('Motivo do cancelamento (opcional):');
-      cancelRevenue(id, user.name, reason || undefined);
+      try {
+        await cancelRevenue(id, user.name, reason || undefined);
+      } catch (err) {
+        alert(err instanceof Error ? err.message : 'Erro ao cancelar receita');
+      }
     }
   };
 
@@ -69,7 +85,9 @@ export function Revenues() {
 
   const handleDeleteRevenue = (id: string) => {
     if (window.confirm('Tem certeza que deseja excluir esta receita?')) {
-      deleteRevenue(id);
+      deleteRevenue(id).catch(err => {
+        alert(err instanceof Error ? err.message : 'Erro ao excluir receita');
+      });
     }
   };
 

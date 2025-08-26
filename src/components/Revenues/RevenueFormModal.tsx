@@ -132,18 +132,7 @@ export function RevenueFormModal({
         nextRecurrenceDate: formData.recurrenceType !== 'none' ? formData.nextRecurrenceDate : undefined
       };
 
-      if (initialData) {
-        // Editing existing revenue
-        onSave({
-          ...initialData,
-          ...revenueData
-        });
-      } else {
-        // Creating new revenue
-        onSave(revenueData);
-      }
-
-      onClose();
+      onSave(revenueData);
     }
   };
 
