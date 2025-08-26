@@ -5,7 +5,7 @@ import { CostCenter } from '../../types';
 interface CreateCostCenterModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (costCenter: Partial<CostCenter>) => Promise<void>; // ← agora retorna Promise
+  onSave: (costCenter: Partial<CostCenter>) => Promise<void>;
   parentCostCenters: CostCenter[];
 }
 
@@ -29,12 +29,11 @@ export function CreateCostCenterModal({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => { // ← agora é async
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validation
     const newErrors: Record<string, string> = {};
-    
     if (!formData.name.trim()) newErrors.name = 'Nome é obrigatório';
     if (!formData.code.trim()) newErrors.code = 'Código é obrigatório';
     if (!formData.description.trim()) newErrors.description = 'Descrição é obrigatória';
@@ -67,7 +66,7 @@ export function CreateCostCenterModal({
       };
 
       try {
-        await onSave(costCenterData); // ← agora compila
+        await onSave(costCenterData);
         // Reset form APÓS salvar com sucesso
         setFormData({
           name: '',
@@ -104,6 +103,7 @@ export function CreateCostCenterModal({
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            disabled={isSubmitting}
           >
             <X className="w-5 h-5 text-gray-600" />
           </button>
@@ -214,4 +214,72 @@ export function CreateCostCenterModal({
                 }`}
                 placeholder="Nome do gestor"
               />
-              {errors.manager && <p className="text-red-500 text-xs mt-1">{errors.mana
+              {errors.manager && (
+                <p className="text-red-500 text-xs mt-1">{errors.manager}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Budget and Status */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Orçamento (R$) *
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={formData.budget}
+                onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  errors.budget ? 'border-red-500' : 'border-gray-300'
+                }`}
+                placeholder="0.00"
+              />
+              {errors.budget && <p className="text-red-500 text-xs mt-1">{errors.budget}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Status
+              </label>
+              <select
+                value={formData.status}
+                onChange={(e) => setFormData({ ...formData, status: e.target.value as 'active' | 'inactive' })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="active">Ativo</option>
+                <option value="inactive">Inativo</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center justify-end space-x-3 pt-6 border-t border-gray-200">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              disabled={isSubmitting}
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSubmitting ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              ) : (
+                <Save className="w-4 h-4" />
+              )}
+              <span>{isSubmitting ? 'Salvando...' : 'Salvar Centro de Custo'}</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
