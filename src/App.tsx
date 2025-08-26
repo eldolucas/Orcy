@@ -7,13 +7,12 @@ import { Revenues } from './pages/Revenues';
 import { AccountingClassificationsPage } from './pages/AccountingClassificationsPage';
 import { FinancialYearsPage } from './pages/FinancialYearsPage';
 import { CompaniesPage } from './pages/CompaniesPage';
-import { BusinessGroupsPage } from './pages/BusinessGroupsPage';
 import { InsumosPage } from './pages/InsumosPage';
 import { ExpenseClassificationsPage } from './pages/ExpenseClassificationsPage';
 import { LaborBudgetPage } from './pages/LaborBudgetPage';
 import { ContractsPage } from './pages/ContractsPage';
 import { FixedAssetsPage } from './pages/FixedAssetsPage';
-import { BusinessGroupsPage } from "./pages/BusinessGroups/BusinessGroupsPage";
+import { BusinessGroupsPage } from './pages/BusinessGroupsPage';
 import { Sidebar } from './components/Layout/Sidebar';
 import { Header } from './components/Layout/Header';
 
@@ -38,6 +37,8 @@ function AppContent() {
     switch (section) {
       case 'companies':
         return 'Empresas';
+      case 'business-groups':
+        return 'Grupos Empresariais';
       case 'business-groups':
         return 'Grupos Empresariais';
       case 'cost-centers':
@@ -69,6 +70,8 @@ function AppContent() {
     switch (activeSection) {
       case 'companies':
         return <CompaniesPage />;
+      case 'business-groups':
+        return <BusinessGroupsPage />;
       case 'business-groups':
         return <BusinessGroupsPage />;
       case 'cost-centers':
