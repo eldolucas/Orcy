@@ -1,108 +1,62 @@
 import { useState, useEffect } from 'react';
 import { AccountingClassification, AccountingClassificationFormData } from '../types/accountingClassification';
+import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
-// Mock data para classificações contábeis
-const mockAccountingClassifications: AccountingClassification[] = [
-  {
-    id: '1',
-    name: 'Receita de Vendas',
-    code: 'REC-VND',
-    type: 'revenue',
-    description: 'Receitas provenientes de vendas de produtos e serviços',
-    isActive: true,
-    companyId: '1',
-    createdAt: '2024-01-01',
-    updatedAt: '2024-01-01',
-    createdBy: 'João Silva'
-  },
-  {
-    id: '2',
-    name: 'Despesas Administrativas',
-    code: 'DESP-ADM',
-    type: 'expense',
-    description: 'Despesas relacionadas à administração da empresa',
-    isActive: true,
-    companyId: '1',
-    createdAt: '2024-01-01',
-    updatedAt: '2024-01-01',
-    createdBy: 'Maria Santos'
-  },
-  {
-    id: '3',
-    name: 'Equipamentos',
-    code: 'AT-EQUIP',
-    type: 'asset',
-    description: 'Equipamentos e máquinas da empresa',
-    isActive: true,
-    companyId: '1',
-    createdAt: '2024-01-01',
-    updatedAt: '2024-01-01',
-    createdBy: 'Pedro Costa'
-  },
-  {
-    id: '4',
-    name: 'Empréstimos',
-    code: 'PAS-EMP',
-    type: 'liability',
-    description: 'Empréstimos e financiamentos',
-    isActive: true,
-    companyId: '2',
-    createdAt: '2024-01-01',
-    updatedAt: '2024-01-01',
-    createdBy: 'Ana Rodrigues'
-  },
-  {
-    id: '5',
-    name: 'Capital Social',
-    code: 'PL-CAP',
-    type: 'equity',
-    description: 'Capital social da empresa',
-    isActive: true,
-    companyId: '2',
-    createdAt: '2024-01-01',
-    updatedAt: '2024-01-01',
-    createdBy: 'Carlos Oliveira'
-  },
-  {
-    id: '6',
-    name: 'Despesas de Marketing',
-    code: 'DESP-MKT',
-    type: 'expense',
-    description: 'Despesas relacionadas a marketing e publicidade',
-    isActive: false,
-    companyId: '2',
-    createdAt: '2024-01-01',
-    updatedAt: '2024-01-15',
-    createdBy: 'Roberto Lima'
-  }
-];
+// Função para converter dados do Supabase para o formato da aplicação
+const mapSupabaseToAccountingClassification = (data: any): AccountingClassification => ({
+  id: data.id,
+  name: data.name,
+  code: data.code,
+  type: data.type,
+  description: data.description,
+  isActive: data.is_active,
+  companyId: data.company_id,
+  createdAt: data.created_at?.split('T')[0] || '',
+  updatedAt: data.updated_at?.split('T')[0] || '',
+  createdBy: data.created_by
+});
+
+// Função para converter dados da aplicação para o formato do Supabase
+const mapAccountingClassificationToSupabase = (classification: AccountingClassificationFormData) => ({
+  name: classification.name,
+  code: classification.code,
+  type: classification.type,
+  description: classification.description,
+  is_active: classification.isActive
+});
 
 export function useAccountingClassifications() {
-  const { activeCompany } = useAuth();
+  const { activeCompany, user } = useAuth();
   const [accountingClassifications, setAccountingClassifications] = useState<AccountingClassification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Simula uma chamada de API
     const fetchAccountingClassifications = async () => {
+      if (!activeCompany) {
+        setAccountingClassifications([]);
+        setIsLoading(false);
+        return;
+      }
+
       setIsLoading(true);
       setError(null);
       
       try {
-        // Simula um delay de rede
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        // Filtra classificações pela empresa ativa
-        const filteredClassifications = activeCompany 
-          ? mockAccountingClassifications.filter(classification => classification.companyId === activeCompany.id)
-          : mockAccountingClassifications;
-        
-        setAccountingClassifications(filteredClassifications);
+        const { data, error } = await supabase
+          .from('accounting_classifications')
+          .select('*')
+          .eq('company_id', activeCompany.id)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        const mappedClassifications = data?.map(mapSupabaseToAccountingClassification) || [];
+        setAccountingClassifications(mappedClassifications);
       } catch (err) {
-        setError('Erro ao carregar classificações contábeis. Por favor, tente novamente.');
         console.error('Erro ao buscar classificações contábeis:', err);
+        setError('Erro ao carregar classificações contábeis. Por favor, tente novamente.');
       } finally {
         setIsLoading(false);
       }
@@ -112,87 +66,76 @@ export function useAccountingClassifications() {
   }, [activeCompany]);
 
   const addAccountingClassification = async (classificationData: AccountingClassificationFormData): Promise<AccountingClassification> => {
-    setIsLoading(true);
-    
     try {
-      // Simula um delay de rede
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
       if (!activeCompany) {
         throw new Error('Nenhuma empresa ativa selecionada');
       }
-      
-      const newClassification: AccountingClassification = {
-        id: Date.now().toString(),
-        ...classificationData,
-        companyId: activeCompany.id,
-        createdAt: new Date().toISOString().split('T')[0],
-        updatedAt: new Date().toISOString().split('T')[0],
-        createdBy: 'Usuário Atual' // Em uma implementação real, viria do contexto de autenticação
+
+      const supabaseData = {
+        ...mapAccountingClassificationToSupabase(classificationData),
+        company_id: activeCompany.id,
+        created_by: user?.name || 'Usuário Atual'
       };
-      
+
+      const { data, error } = await supabase
+        .from('accounting_classifications')
+        .insert([supabaseData])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const newClassification = mapSupabaseToAccountingClassification(data);
       setAccountingClassifications(prev => [newClassification, ...prev]);
+      
       return newClassification;
     } catch (err) {
-      setError('Erro ao adicionar classificação contábil. Por favor, tente novamente.');
       console.error('Erro ao adicionar classificação contábil:', err);
+      setError('Erro ao adicionar classificação contábil. Por favor, tente novamente.');
       throw err;
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const updateAccountingClassification = async (id: string, updates: Partial<AccountingClassificationFormData>): Promise<AccountingClassification> => {
-    setIsLoading(true);
-    
     try {
-      // Simula um delay de rede
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      let updatedClassification: AccountingClassification | undefined;
-      
+      const supabaseUpdates = mapAccountingClassificationToSupabase(updates as AccountingClassificationFormData);
+
+      const { data, error } = await supabase
+        .from('accounting_classifications')
+        .update(supabaseUpdates)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const updatedClassification = mapSupabaseToAccountingClassification(data);
       setAccountingClassifications(prev => 
-        prev.map(classification => {
-          if (classification.id === id) {
-            updatedClassification = {
-              ...classification,
-              ...updates,
-              updatedAt: new Date().toISOString().split('T')[0]
-            };
-            return updatedClassification;
-          }
-          return classification;
-        })
+        prev.map(classification => classification.id === id ? updatedClassification : classification)
       );
-      
-      if (!updatedClassification) {
-        throw new Error('Classificação contábil não encontrada');
-      }
       
       return updatedClassification;
     } catch (err) {
-      setError('Erro ao atualizar classificação contábil. Por favor, tente novamente.');
       console.error('Erro ao atualizar classificação contábil:', err);
+      setError('Erro ao atualizar classificação contábil. Por favor, tente novamente.');
       throw err;
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const deleteAccountingClassification = async (id: string): Promise<void> => {
-    setIsLoading(true);
-    
     try {
-      // Simula um delay de rede
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      const { error } = await supabase
+        .from('accounting_classifications')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
       setAccountingClassifications(prev => prev.filter(classification => classification.id !== id));
     } catch (err) {
-      setError('Erro ao excluir classificação contábil. Por favor, tente novamente.');
       console.error('Erro ao excluir classificação contábil:', err);
+      setError('Erro ao excluir classificação contábil. Por favor, tente novamente.');
       throw err;
-    } finally {
-      setIsLoading(false);
     }
   };
 

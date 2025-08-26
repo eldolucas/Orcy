@@ -496,6 +496,38 @@ export type Database = {
           updated_at?: string;
         };
       };
+      accounting_classifications: {
+        Row: {
+          id: string;
+          name: string;
+          code: string;
+          type: 'revenue' | 'expense' | 'asset' | 'liability' | 'equity';
+          description: string;
+          is_active: boolean;
+          company_id: string;
+          created_at: string;
+          updated_at: string;
+          created_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          code: string;
+          type: 'revenue' | 'expense' | 'asset' | 'liability' | 'equity';
+          description: string;
+          is_active?: boolean;
+          company_id: string;
+          created_by?: string | null;
+        };
+        Update: {
+          name?: string;
+          code?: string;
+          type?: 'revenue' | 'expense' | 'asset' | 'liability' | 'equity';
+          description?: string;
+          is_active?: boolean;
+          updated_at?: string;
+        };
+      };
     };
   };
       labor_budget: {

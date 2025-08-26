@@ -41,9 +41,14 @@ export function AccountingClassificationForm({
         name: '',
         code: '',
         type: 'expense',
-        description: '',
-        isActive: true
-      });
+      updateAccountingClassification(classificationToEdit.id, classificationData)
+        .then(() => {
+          setClassificationToEdit(null);
+          setShowCreateModal(false);
+        })
+        .catch(() => {
+          // Error is handled in the hook and displayed in the UI
+        });
     }
     setErrors({});
   }, [initialData, isOpen]);
@@ -62,13 +67,21 @@ export function AccountingClassificationForm({
 
     if (Object.keys(newErrors).length === 0) {
       onSave(formData);
-      onClose();
-    }
+    addAccountingClassification(classificationData)
+      .then(() => {
+        setShowCreateModal(false);
+      })
+      .catch(() => {
+        // Error is handled in the hook and displayed in the UI
+      });
   };
 
   const isEditing = !!initialData;
   const modalTitle = isEditing ? 'Editar Classificação Contábil' : 'Nova Classificação Contábil';
-  const submitButtonText = isEditing ? 'Salvar Alterações' : 'Criar Classificação';
+      deleteAccountingClassification(id)
+        .catch(() => {
+          // Error is handled in the hook and displayed in the UI
+        });
 
   if (!isOpen) return null;
 
