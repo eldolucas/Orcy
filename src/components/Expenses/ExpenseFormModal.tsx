@@ -125,10 +125,7 @@ export function ExpenseFormModal({
 
       if (initialData) {
         // Editing existing expense
-        onSave({
-          ...initialData,
-          ...expenseData
-        });
+        onSave(expenseData);
       } else {
         // Creating new expense
         onSave(expenseData);

@@ -1,228 +1,214 @@
 import { useState, useEffect } from 'react';
 import { Expense } from '../types';
+import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
-// Mock data for expenses
-const mockExpenses: Expense[] = [
-  {
-    id: '1',
-    description: 'Licenças de Software Microsoft Office',
-    amount: 15000,
-    category: 'Licenças',
-    costCenterId: '1',
-    budgetId: '1',
-    fiscalYearId: '1',
-    date: '2024-01-15',
-    createdBy: 'João Silva',
-    status: 'approved',
-    lastUpdated: '2024-01-16',
-    approvedBy: 'Maria Santos',
-    approvedAt: '2024-01-16',
-    notes: 'Renovação anual das licenças corporativas'
-  },
-  {
-    id: '2',
-    description: 'Campanha Google Ads - Janeiro',
-    amount: 8500,
-    category: 'Publicidade Online',
-    costCenterId: '21',
-    budgetId: '2',
-    fiscalYearId: '1',
-    date: '2024-01-14',
-    createdBy: 'Juliana Costa',
-    status: 'approved',
-    lastUpdated: '2024-01-15',
-    approvedBy: 'Ricardo Pereira',
-    approvedAt: '2024-01-15',
-    notes: 'Campanha de lançamento do novo produto'
-  },
-  {
-    id: '3',
-    description: 'Equipamentos de TI - Notebooks',
-    amount: 25000,
-    category: 'Infraestrutura',
-    costCenterId: '12',
-    budgetId: '1',
-    fiscalYearId: '1',
-    date: '2024-01-13',
-    createdBy: 'Ana Rodrigues',
-    status: 'pending',
-    lastUpdated: '2024-01-13',
-    notes: '5 notebooks para equipe de desenvolvimento'
-  },
-  {
-    id: '4',
-    description: 'Treinamento Online - Certificação AWS',
-    amount: 3200,
-    category: 'Treinamentos',
-    costCenterId: '3',
-    budgetId: '3',
-    fiscalYearId: '1',
-    date: '2024-01-12',
-    createdBy: 'Pedro Costa',
-    status: 'approved',
-    lastUpdated: '2024-01-13',
-    approvedBy: 'João Silva',
-    approvedAt: '2024-01-13',
-    notes: 'Certificação para equipe de infraestrutura'
-  },
-  {
-    id: '5',
-    description: 'Material de Marketing - Impressão',
-    amount: 1800,
-    category: 'Marketing Tradicional',
-    costCenterId: '22',
-    budgetId: '2',
-    fiscalYearId: '1',
-    date: '2024-01-11',
-    createdBy: 'Ricardo Pereira',
-    status: 'rejected',
-    lastUpdated: '2024-01-12',
-    rejectedBy: 'Maria Santos',
-    rejectedAt: '2024-01-12',
-    notes: 'Orçamento excedido para material impresso'
-  },
-  {
-    id: '6',
-    description: 'Hospedagem Cloud AWS',
-    amount: 4500,
-    category: 'Infraestrutura',
-    costCenterId: '12',
-    budgetId: '1',
-    fiscalYearId: '1',
-    date: '2024-01-10',
-    createdBy: 'Carlos Oliveira',
-    status: 'approved',
-    lastUpdated: '2024-01-11',
-    approvedBy: 'João Silva',
-    approvedAt: '2024-01-11',
-    notes: 'Custos mensais de infraestrutura cloud'
-  },
-  {
-    id: '7',
-    description: 'Consultoria em Segurança',
-    amount: 12000,
-    category: 'Consultoria',
-    costCenterId: '13',
-    budgetId: '1',
-    fiscalYearId: '1',
-    date: '2024-01-09',
-    createdBy: 'Roberto Lima',
-    status: 'pending',
-    lastUpdated: '2024-01-09',
-    notes: 'Auditoria de segurança trimestral'
-  },
-  {
-    id: '8',
-    description: 'Ferramentas de Design - Adobe Creative',
-    amount: 2400,
-    category: 'Ferramentas',
-    costCenterId: '23',
-    budgetId: '2',
-    fiscalYearId: '1',
-    date: '2024-01-08',
-    createdBy: 'Camila Souza',
-    status: 'approved',
-    lastUpdated: '2024-01-09',
-    approvedBy: 'Maria Santos',
-    approvedAt: '2024-01-09',
-    notes: 'Licenças anuais para equipe de design'
-  }
-];
+// Função para converter dados do Supabase para o formato da aplicação
+const mapSupabaseToExpense = (data: any): Expense => ({
+  id: data.id,
+  description: data.description,
+  amount: parseFloat(data.amount) || 0,
+  category: data.category,
+  costCenterId: data.cost_center_id,
+  budgetId: data.budget_id,
+  fiscalYearId: data.fiscal_year_id,
+  date: data.date,
+  createdBy: data.created_by,
+  status: data.status,
+  lastUpdated: data.last_updated?.split('T')[0] || data.created_at?.split('T')[0] || '',
+  approvedBy: data.approved_by,
+  approvedAt: data.approved_at?.split('T')[0],
+  rejectedBy: data.rejected_by,
+  rejectedAt: data.rejected_at?.split('T')[0],
+  notes: data.notes,
+  attachments: data.attachments
+});
+
+// Função para converter dados da aplicação para o formato do Supabase
+const mapExpenseToSupabase = (expense: Omit<Expense, 'id' | 'lastUpdated'>) => ({
+  description: expense.description,
+  amount: expense.amount,
+  category: expense.category,
+  cost_center_id: expense.costCenterId,
+  budget_id: expense.budgetId,
+  fiscal_year_id: expense.fiscalYearId,
+  date: expense.date,
+  created_by: expense.createdBy,
+  status: expense.status,
+  notes: expense.notes,
+  attachments: expense.attachments
+});
 
 export function useExpenses() {
-  const { activeCompany } = useAuth();
+  const { activeCompany, user } = useAuth();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Simulate API call
-    const fetchData = async () => {
+    const fetchExpenses = async () => {
+      if (!activeCompany) {
+        setExpenses([]);
+        setIsLoading(false);
+        return;
+      }
+
       setIsLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 800));
+      setError(null);
       
-      // Filtrar despesas pela empresa ativa (simulação)
-      // Em uma implementação real, isso seria feito no backend
-      const filteredExpenses = activeCompany 
-        ? mockExpenses.filter(expense => {
-            // Aqui estamos simulando que as primeiras 4 despesas pertencem à empresa 1
-            // e as outras à empresa 2
-            if (activeCompany.id === '1' && ['1', '2', '3', '4'].includes(expense.id)) {
-              return true;
-            } else if (activeCompany.id === '2' && ['5', '6', '7', '8'].includes(expense.id)) {
-              return true;
-            }
-            return false;
-          })
-        : mockExpenses;
-      
-      setExpenses(filteredExpenses);
-      setIsLoading(false);
+      try {
+        const { data, error } = await supabase
+          .from('expenses')
+          .select('*')
+          .eq('company_id', activeCompany.id)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        const mappedExpenses = data?.map(mapSupabaseToExpense) || [];
+        setExpenses(mappedExpenses);
+      } catch (err) {
+        console.error('Erro ao buscar despesas:', err);
+        setError('Erro ao carregar despesas. Por favor, tente novamente.');
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    fetchData();
+    fetchExpenses();
   }, [activeCompany]);
 
-  const addExpense = (newExpense: Omit<Expense, 'id' | 'createdAt' | 'lastUpdated'>) => {
-    const expense: Expense = {
-      ...newExpense,
-      id: Date.now().toString(),
-      lastUpdated: new Date().toISOString().split('T')[0]
-    };
-    
-    setExpenses(prev => [expense, ...prev]);
-    return expense;
+  const addExpense = async (newExpense: Omit<Expense, 'id' | 'lastUpdated'>): Promise<Expense> => {
+    try {
+      if (!activeCompany) {
+        throw new Error('Nenhuma empresa ativa selecionada');
+      }
+
+      const supabaseData = {
+        ...mapExpenseToSupabase(newExpense),
+        company_id: activeCompany.id
+      };
+
+      const { data, error } = await supabase
+        .from('expenses')
+        .insert([supabaseData])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const expense = mapSupabaseToExpense(data);
+      setExpenses(prev => [expense, ...prev]);
+      
+      return expense;
+    } catch (err) {
+      console.error('Erro ao adicionar despesa:', err);
+      setError('Erro ao adicionar despesa. Por favor, tente novamente.');
+      throw err;
+    }
   };
 
-  const updateExpense = (id: string, updates: Partial<Expense>) => {
-    setExpenses(prev => 
-      prev.map(expense => 
-        expense.id === id 
-          ? { 
-              ...expense, 
-              ...updates, 
-              lastUpdated: new Date().toISOString().split('T')[0]
-            }
-          : expense
-      )
-    );
+  const updateExpense = async (id: string, updates: Partial<Expense>): Promise<Expense> => {
+    try {
+      // Converte os campos de volta para o formato do Supabase
+      const supabaseUpdates: any = {};
+      
+      if (updates.description !== undefined) supabaseUpdates.description = updates.description;
+      if (updates.amount !== undefined) supabaseUpdates.amount = updates.amount;
+      if (updates.category !== undefined) supabaseUpdates.category = updates.category;
+      if (updates.costCenterId !== undefined) supabaseUpdates.cost_center_id = updates.costCenterId;
+      if (updates.budgetId !== undefined) supabaseUpdates.budget_id = updates.budgetId;
+      if (updates.fiscalYearId !== undefined) supabaseUpdates.fiscal_year_id = updates.fiscalYearId;
+      if (updates.date !== undefined) supabaseUpdates.date = updates.date;
+      if (updates.status !== undefined) supabaseUpdates.status = updates.status;
+      if (updates.notes !== undefined) supabaseUpdates.notes = updates.notes;
+      if (updates.attachments !== undefined) supabaseUpdates.attachments = updates.attachments;
+      if (updates.approvedBy !== undefined) supabaseUpdates.approved_by = updates.approvedBy;
+      if (updates.approvedAt !== undefined) supabaseUpdates.approved_at = updates.approvedAt;
+      if (updates.rejectedBy !== undefined) supabaseUpdates.rejected_by = updates.rejectedBy;
+      if (updates.rejectedAt !== undefined) supabaseUpdates.rejected_at = updates.rejectedAt;
+
+      const { data, error } = await supabase
+        .from('expenses')
+        .update(supabaseUpdates)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const updatedExpense = mapSupabaseToExpense(data);
+      setExpenses(prev => 
+        prev.map(expense => expense.id === id ? updatedExpense : expense)
+      );
+      
+      return updatedExpense;
+    } catch (err) {
+      console.error('Erro ao atualizar despesa:', err);
+      setError('Erro ao atualizar despesa. Por favor, tente novamente.');
+      throw err;
+    }
   };
 
-  const deleteExpense = (id: string) => {
-    setExpenses(prev => prev.filter(expense => expense.id !== id));
+  const deleteExpense = async (id: string): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('expenses')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setExpenses(prev => prev.filter(expense => expense.id !== id));
+    } catch (err) {
+      console.error('Erro ao excluir despesa:', err);
+      setError('Erro ao excluir despesa. Por favor, tente novamente.');
+      throw err;
+    }
   };
 
-  const approveExpense = (id: string, approvedBy: string) => {
-    updateExpense(id, {
-      status: 'approved',
-      approvedBy,
-      approvedAt: new Date().toISOString().split('T')[0]
-    });
+  const approveExpense = async (id: string, approvedBy: string): Promise<void> => {
+    try {
+      await updateExpense(id, {
+        status: 'approved',
+        approvedBy,
+        approvedAt: new Date().toISOString().split('T')[0]
+      });
+    } catch (err) {
+      console.error('Erro ao aprovar despesa:', err);
+      throw err;
+    }
   };
 
-  const rejectExpense = (id: string, rejectedBy: string, notes?: string) => {
-    updateExpense(id, {
-      status: 'rejected',
-      rejectedBy,
-      rejectedAt: new Date().toISOString().split('T')[0],
-      notes
-    });
+  const rejectExpense = async (id: string, rejectedBy: string, notes?: string): Promise<void> => {
+    try {
+      await updateExpense(id, {
+        status: 'rejected',
+        rejectedBy,
+        rejectedAt: new Date().toISOString().split('T')[0],
+        notes
+      });
+    } catch (err) {
+      console.error('Erro ao rejeitar despesa:', err);
+      throw err;
+    }
   };
 
   const getFilteredExpenses = (
-    searchTerm: string, 
-    statusFilter: string, 
+    searchTerm: string = '', 
+    statusFilter: string = 'all', 
     costCenterFilter: string = 'all',
     categoryFilter: string = 'all',
     dateRange: { start?: string; end?: string } = {}
-  ) => {
+  ): Expense[] => {
     let filtered = expenses;
 
     if (searchTerm) {
+      const term = searchTerm.toLowerCase();
       filtered = filtered.filter(expense =>
-        expense.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        expense.createdBy.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        expense.category.toLowerCase().includes(searchTerm.toLowerCase())
+        expense.description.toLowerCase().includes(term) ||
+        expense.createdBy.toLowerCase().includes(term) ||
+        expense.category.toLowerCase().includes(term)
       );
     }
 
@@ -249,30 +235,30 @@ export function useExpenses() {
     return filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   };
 
-  const getExpensesByCostCenter = (costCenterId: string) => {
+  const getExpensesByCostCenter = (costCenterId: string): Expense[] => {
     return expenses.filter(expense => expense.costCenterId === costCenterId);
   };
 
-  const getExpensesByBudget = (budgetId: string) => {
+  const getExpensesByBudget = (budgetId: string): Expense[] => {
     return expenses.filter(expense => expense.budgetId === budgetId);
   };
 
-  const getExpensesByCategory = (category: string) => {
+  const getExpensesByCategory = (category: string): Expense[] => {
     return expenses.filter(expense => expense.category === category);
   };
 
-  const getTotalExpensesByStatus = (status: string) => {
+  const getTotalExpensesByStatus = (status: string): number => {
     return expenses
       .filter(expense => expense.status === status)
       .reduce((total, expense) => total + expense.amount, 0);
   };
 
-  const getExpenseCategories = () => {
+  const getExpenseCategories = (): string[] => {
     const categories = [...new Set(expenses.map(expense => expense.category))];
     return categories.sort();
   };
 
-  const getMonthlyExpenses = (year: number, month: number) => {
+  const getMonthlyExpenses = (year: number, month: number): Expense[] => {
     return expenses.filter(expense => {
       const expenseDate = new Date(expense.date);
       return expenseDate.getFullYear() === year && expenseDate.getMonth() === month - 1;
@@ -282,6 +268,7 @@ export function useExpenses() {
   return {
     expenses,
     isLoading,
+    error,
     addExpense,
     updateExpense,
     deleteExpense,

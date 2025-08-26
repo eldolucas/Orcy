@@ -37,28 +37,40 @@ export function Expenses() {
   const [expenseToEdit, setExpenseToEdit] = useState<Expense | null>(null);
   const [expenseDetails, setExpenseDetails] = useState<Expense | null>(null);
 
-  const handleSaveExpense = (expenseData: Omit<Expense, 'id' | 'lastUpdated'> | Expense) => {
+  const handleSaveExpense = async (expenseData: any) => {
+    try {
     if (expenseToEdit) {
       // Editing existing expense
-      updateExpense(expenseToEdit.id, expenseData as Partial<Expense>);
+        await updateExpense(expenseToEdit.id, expenseData);
     } else {
       // Creating new expense
-      addExpense(expenseData as Omit<Expense, 'id' | 'lastUpdated'>);
+        await addExpense(expenseData);
     }
-    setShowCreateModal(false);
-    setExpenseToEdit(null);
+      setShowCreateModal(false);
+      setExpenseToEdit(null);
+    } catch (err) {
+      // Error is handled in the hook and displayed in the UI
+    }
   };
 
-  const handleApproveExpense = (id: string) => {
+  const handleApproveExpense = async (id: string) => {
     if (user && (user.role === 'admin' || user.role === 'manager')) {
-      approveExpense(id, user.name);
+      try {
+        await approveExpense(id, user.name);
+      } catch (err) {
+        alert(err instanceof Error ? err.message : 'Erro ao aprovar despesa');
+      }
     }
   };
 
-  const handleRejectExpense = (id: string) => {
+  const handleRejectExpense = async (id: string) => {
     if (user && (user.role === 'admin' || user.role === 'manager')) {
       const reason = prompt('Motivo da rejeição (opcional):');
-      rejectExpense(id, user.name, reason || undefined);
+      try {
+        await rejectExpense(id, user.name, reason || undefined);
+      } catch (err) {
+        alert(err instanceof Error ? err.message : 'Erro ao rejeitar despesa');
+      }
     }
   };
 
@@ -69,7 +81,9 @@ export function Expenses() {
 
   const handleDeleteExpense = (id: string) => {
     if (window.confirm('Tem certeza que deseja excluir esta despesa?')) {
-      deleteExpense(id);
+      deleteExpense(id).catch(err => {
+        alert(err instanceof Error ? err.message : 'Erro ao excluir despesa');
+      });
     }
   };
 
