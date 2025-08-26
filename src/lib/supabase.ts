@@ -1,0 +1,295 @@
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables');
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// Types for database tables
+export type Database = {
+  public: {
+    Tables: {
+      companies: {
+        Row: {
+          id: string;
+          razao_social: string;
+          apelido: string;
+          cnpj: string;
+          codigo_empresa: string;
+          status: 'active' | 'inactive';
+          endereco: string | null;
+          cidade: string | null;
+          estado: string | null;
+          cep: string | null;
+          telefone: string | null;
+          email: string | null;
+          website: string | null;
+          responsavel: string | null;
+          observacoes: string | null;
+          created_at: string;
+          updated_at: string;
+          created_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          razao_social: string;
+          apelido: string;
+          cnpj: string;
+          codigo_empresa: string;
+          status?: 'active' | 'inactive';
+          endereco?: string | null;
+          cidade?: string | null;
+          estado?: string | null;
+          cep?: string | null;
+          telefone?: string | null;
+          email?: string | null;
+          website?: string | null;
+          responsavel?: string | null;
+          observacoes?: string | null;
+          created_by?: string | null;
+        };
+        Update: {
+          id?: string;
+          razao_social?: string;
+          apelido?: string;
+          cnpj?: string;
+          codigo_empresa?: string;
+          status?: 'active' | 'inactive';
+          endereco?: string | null;
+          cidade?: string | null;
+          estado?: string | null;
+          cep?: string | null;
+          telefone?: string | null;
+          email?: string | null;
+          website?: string | null;
+          responsavel?: string | null;
+          observacoes?: string | null;
+          updated_at?: string;
+        };
+      };
+      cost_centers: {
+        Row: {
+          id: string;
+          name: string;
+          code: string;
+          description: string;
+          department: string;
+          manager: string;
+          parent_id: string | null;
+          level: number;
+          path: string;
+          budget: number;
+          spent: number;
+          allocated_budget: number;
+          inherited_budget: number;
+          status: 'active' | 'inactive';
+          company_id: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          code: string;
+          description: string;
+          department: string;
+          manager: string;
+          parent_id?: string | null;
+          level: number;
+          path: string;
+          budget: number;
+          spent?: number;
+          allocated_budget: number;
+          inherited_budget?: number;
+          status?: 'active' | 'inactive';
+          company_id: string;
+        };
+        Update: {
+          name?: string;
+          code?: string;
+          description?: string;
+          department?: string;
+          manager?: string;
+          parent_id?: string | null;
+          level?: number;
+          path?: string;
+          budget?: number;
+          spent?: number;
+          allocated_budget?: number;
+          inherited_budget?: number;
+          status?: 'active' | 'inactive';
+          updated_at?: string;
+        };
+      };
+      financial_years: {
+        Row: {
+          id: string;
+          year: number;
+          name: string;
+          start_date: string;
+          end_date: string;
+          status: 'planning' | 'active' | 'closed' | 'archived';
+          description: string | null;
+          is_default: boolean;
+          created_by: string;
+          created_at: string;
+          closed_at: string | null;
+          budget_version: number;
+          total_budget: number | null;
+          total_spent: number | null;
+          company_id: string;
+        };
+        Insert: {
+          id?: string;
+          year: number;
+          name: string;
+          start_date: string;
+          end_date: string;
+          status?: 'planning' | 'active' | 'closed' | 'archived';
+          description?: string | null;
+          is_default?: boolean;
+          created_by: string;
+          closed_at?: string | null;
+          budget_version?: number;
+          total_budget?: number | null;
+          total_spent?: number | null;
+          company_id: string;
+        };
+        Update: {
+          year?: number;
+          name?: string;
+          start_date?: string;
+          end_date?: string;
+          status?: 'planning' | 'active' | 'closed' | 'archived';
+          description?: string | null;
+          is_default?: boolean;
+          closed_at?: string | null;
+          budget_version?: number;
+          total_budget?: number | null;
+          total_spent?: number | null;
+          updated_at?: string;
+        };
+      };
+      expenses: {
+        Row: {
+          id: string;
+          description: string;
+          amount: number;
+          category: string;
+          cost_center_id: string;
+          budget_id: string;
+          fiscal_year_id: string;
+          date: string;
+          created_by: string;
+          status: 'pending' | 'approved' | 'rejected';
+          last_updated: string;
+          approved_by: string | null;
+          approved_at: string | null;
+          rejected_by: string | null;
+          rejected_at: string | null;
+          notes: string | null;
+          attachments: string[] | null;
+          company_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          description: string;
+          amount: number;
+          category: string;
+          cost_center_id: string;
+          budget_id: string;
+          fiscal_year_id: string;
+          date: string;
+          created_by: string;
+          status?: 'pending' | 'approved' | 'rejected';
+          notes?: string | null;
+          attachments?: string[] | null;
+          company_id: string;
+        };
+        Update: {
+          description?: string;
+          amount?: number;
+          category?: string;
+          cost_center_id?: string;
+          budget_id?: string;
+          fiscal_year_id?: string;
+          date?: string;
+          status?: 'pending' | 'approved' | 'rejected';
+          approved_by?: string | null;
+          approved_at?: string | null;
+          rejected_by?: string | null;
+          rejected_at?: string | null;
+          notes?: string | null;
+          attachments?: string[] | null;
+          last_updated?: string;
+        };
+      };
+      revenues: {
+        Row: {
+          id: string;
+          description: string;
+          amount: number;
+          source: string;
+          cost_center_id: string;
+          budget_id: string;
+          fiscal_year_id: string;
+          date: string;
+          created_by: string;
+          status: 'pending' | 'confirmed' | 'cancelled';
+          last_updated: string;
+          confirmed_by: string | null;
+          confirmed_at: string | null;
+          cancelled_by: string | null;
+          cancelled_at: string | null;
+          notes: string | null;
+          attachments: string[] | null;
+          recurrence_type: 'none' | 'monthly' | 'quarterly' | 'yearly' | null;
+          next_recurrence_date: string | null;
+          company_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          description: string;
+          amount: number;
+          source: string;
+          cost_center_id: string;
+          budget_id: string;
+          fiscal_year_id: string;
+          date: string;
+          created_by: string;
+          status?: 'pending' | 'confirmed' | 'cancelled';
+          notes?: string | null;
+          attachments?: string[] | null;
+          recurrence_type?: 'none' | 'monthly' | 'quarterly' | 'yearly' | null;
+          next_recurrence_date?: string | null;
+          company_id: string;
+        };
+        Update: {
+          description?: string;
+          amount?: number;
+          source?: string;
+          cost_center_id?: string;
+          budget_id?: string;
+          fiscal_year_id?: string;
+          date?: string;
+          status?: 'pending' | 'confirmed' | 'cancelled';
+          confirmed_by?: string | null;
+          confirmed_at?: string | null;
+          cancelled_by?: string | null;
+          cancelled_at?: string | null;
+          notes?: string | null;
+          attachments?: string[] | null;
+          recurrence_type?: 'none' | 'monthly' | 'quarterly' | 'yearly' | null;
+          next_recurrence_date?: string | null;
+          last_updated?: string;
+        };
+      };
+    };
+  };
+};
