@@ -80,7 +80,13 @@ export function FinancialYearForm({
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
-      onSave(formData);
+      onSave(formData)
+        .then(() => {
+          // Success is handled in the parent component
+        })
+        .catch(() => {
+          // Error is handled in the hook and displayed in the UI
+        });
     }
   };
 

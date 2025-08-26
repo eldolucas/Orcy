@@ -31,7 +31,7 @@ export function FinancialYearsPage() {
       await addFinancialYear(formData);
       setShowCreateModal(false);
     } catch (err) {
-      // Error is handled in the hook and displayed in the UI
+      alert(err instanceof Error ? err.message : 'Erro ao criar exercício financeiro');
     }
   };
 
@@ -47,7 +47,7 @@ export function FinancialYearsPage() {
         setFinancialYearToEdit(null);
         setShowCreateModal(false);
       } catch (err) {
-        // Error is handled in the hook and displayed in the UI
+        alert(err instanceof Error ? err.message : 'Erro ao atualizar exercício financeiro');
       }
     }
   };
