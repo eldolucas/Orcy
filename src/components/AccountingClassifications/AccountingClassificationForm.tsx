@@ -41,6 +41,8 @@ export function AccountingClassificationForm({
         name: '',
         code: '',
         type: 'expense',
+      }
+      )
       updateAccountingClassification(classificationToEdit.id, classificationData)
         .then(() => {
           setClassificationToEdit(null);
@@ -67,6 +69,7 @@ export function AccountingClassificationForm({
 
     if (Object.keys(newErrors).length === 0) {
       onSave(formData);
+    }
     addAccountingClassification(classificationData)
       .then(() => {
         setShowCreateModal(false);
