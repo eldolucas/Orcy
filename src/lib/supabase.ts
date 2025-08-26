@@ -290,6 +290,71 @@ export type Database = {
           last_updated?: string;
         };
       };
+      contracts: {
+        Row: {
+          id: string;
+          name: string;
+          description: string | null;
+          contract_number: string;
+          contract_type: 'service' | 'lease' | 'rental' | 'other';
+          start_date: string;
+          end_date: string | null;
+          value: number;
+          currency: string;
+          recurrence_type: 'monthly' | 'quarterly' | 'yearly' | 'none';
+          next_payment_date: string | null;
+          partner_name: string;
+          cost_center_id: string;
+          fiscal_year_id: string;
+          status: 'active' | 'inactive' | 'expired' | 'cancelled';
+          attachments: string[] | null;
+          notes: string | null;
+          company_id: string;
+          created_at: string;
+          updated_at: string;
+          created_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          description?: string | null;
+          contract_number: string;
+          contract_type: 'service' | 'lease' | 'rental' | 'other';
+          start_date: string;
+          end_date?: string | null;
+          value: number;
+          currency?: string;
+          recurrence_type?: 'monthly' | 'quarterly' | 'yearly' | 'none';
+          next_payment_date?: string | null;
+          partner_name: string;
+          cost_center_id: string;
+          fiscal_year_id: string;
+          status?: 'active' | 'inactive' | 'expired' | 'cancelled';
+          attachments?: string[] | null;
+          notes?: string | null;
+          company_id: string;
+          created_by?: string | null;
+        };
+        Update: {
+          name?: string;
+          description?: string | null;
+          contract_number?: string;
+          contract_type?: 'service' | 'lease' | 'rental' | 'other';
+          start_date?: string;
+          end_date?: string | null;
+          value?: number;
+          currency?: string;
+          recurrence_type?: 'monthly' | 'quarterly' | 'yearly' | 'none';
+          next_payment_date?: string | null;
+          partner_name?: string;
+          cost_center_id?: string;
+          fiscal_year_id?: string;
+          status?: 'active' | 'inactive' | 'expired' | 'cancelled';
+          attachments?: string[] | null;
+          notes?: string | null;
+          updated_at?: string;
+        };
+      };
       insumos: {
         Row: {
           id: string;

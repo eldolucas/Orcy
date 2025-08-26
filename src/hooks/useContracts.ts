@@ -1,187 +1,83 @@
 import { useState, useEffect } from 'react';
 import { Contract, ContractFormData } from '../types/contract';
+import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
-// Mock data para contratos
-const mockContracts: Contract[] = [
-  {
-    id: '1',
-    name: 'Serviço de Limpeza',
-    description: 'Serviço de limpeza para o escritório central',
-    contractNumber: 'SERV-2024-001',
-    contractType: 'service',
-    startDate: '2024-01-01',
-    endDate: '2024-12-31',
-    value: 3500,
-    currency: 'BRL',
-    recurrenceType: 'monthly',
-    nextPaymentDate: '2024-02-01',
-    partnerName: 'Limpeza Express Ltda',
-    costCenterId: '1',
-    fiscalYearId: '1',
-    status: 'active',
-    companyId: '1',
-    createdAt: '2023-12-15',
-    updatedAt: '2023-12-15',
-    createdBy: 'João Silva',
-    notes: 'Contrato inclui material de limpeza'
-  },
-  {
-    id: '2',
-    name: 'Aluguel de Escritório',
-    description: 'Aluguel do escritório sede',
-    contractNumber: 'ALG-2024-001',
-    contractType: 'rental',
-    startDate: '2024-01-01',
-    endDate: '2026-12-31',
-    value: 12000,
-    currency: 'BRL',
-    recurrenceType: 'monthly',
-    nextPaymentDate: '2024-02-05',
-    partnerName: 'Imobiliária Central',
-    costCenterId: '1',
-    fiscalYearId: '1',
-    status: 'active',
-    companyId: '1',
-    createdAt: '2023-11-20',
-    updatedAt: '2023-11-20',
-    createdBy: 'Maria Santos',
-    notes: 'Reajuste anual pelo IGPM'
-  },
-  {
-    id: '3',
-    name: 'Licenças Microsoft 365',
-    description: 'Licenças para pacote Office e serviços cloud',
-    contractNumber: 'LIC-2024-001',
-    contractType: 'service',
-    startDate: '2024-01-01',
-    endDate: '2024-12-31',
-    value: 5000,
-    currency: 'USD',
-    recurrenceType: 'monthly',
-    nextPaymentDate: '2024-02-01',
-    partnerName: 'Microsoft Corporation',
-    costCenterId: '11',
-    fiscalYearId: '1',
-    status: 'active',
-    companyId: '1',
-    createdAt: '2023-12-10',
-    updatedAt: '2023-12-10',
-    createdBy: 'Pedro Costa'
-  },
-  {
-    id: '4',
-    name: 'Locação de Impressoras',
-    description: 'Locação de 5 impressoras multifuncionais',
-    contractNumber: 'LOC-2024-001',
-    contractType: 'lease',
-    startDate: '2024-01-01',
-    endDate: '2025-12-31',
-    value: 2500,
-    currency: 'BRL',
-    recurrenceType: 'monthly',
-    nextPaymentDate: '2024-02-10',
-    partnerName: 'PrintTech Solutions',
-    costCenterId: '12',
-    fiscalYearId: '1',
-    status: 'active',
-    companyId: '1',
-    createdAt: '2023-12-05',
-    updatedAt: '2023-12-05',
-    createdBy: 'Ana Rodrigues',
-    notes: 'Inclui manutenção e suprimentos'
-  },
-  {
-    id: '5',
-    name: 'Consultoria Jurídica',
-    description: 'Serviços de assessoria jurídica',
-    contractNumber: 'CONS-2023-005',
-    contractType: 'service',
-    startDate: '2023-06-01',
-    endDate: '2024-05-31',
-    value: 8000,
-    currency: 'BRL',
-    recurrenceType: 'monthly',
-    nextPaymentDate: '2024-02-05',
-    partnerName: 'Oliveira & Associados',
-    costCenterId: '3',
-    fiscalYearId: '1',
-    status: 'active',
-    companyId: '2',
-    createdAt: '2023-05-20',
-    updatedAt: '2023-05-20',
-    createdBy: 'Carlos Oliveira'
-  },
-  {
-    id: '6',
-    name: 'Serviço de Internet Dedicada',
-    description: 'Link de internet dedicado 200Mbps',
-    contractNumber: 'NET-2023-002',
-    contractType: 'service',
-    startDate: '2023-03-01',
-    endDate: '2025-02-28',
-    value: 3000,
-    currency: 'BRL',
-    recurrenceType: 'monthly',
-    nextPaymentDate: '2024-02-01',
-    partnerName: 'TelecomNet',
-    costCenterId: '13',
-    fiscalYearId: '1',
-    status: 'active',
-    companyId: '1',
-    createdAt: '2023-02-15',
-    updatedAt: '2023-02-15',
-    createdBy: 'Roberto Lima'
-  },
-  {
-    id: '7',
-    name: 'Aluguel de Veículos',
-    description: 'Locação de 3 veículos executivos',
-    contractNumber: 'VEI-2023-003',
-    contractType: 'lease',
-    startDate: '2023-07-01',
-    endDate: '2024-06-30',
-    value: 9000,
-    currency: 'BRL',
-    recurrenceType: 'monthly',
-    nextPaymentDate: '2024-02-01',
-    partnerName: 'AutoFlex Locadora',
-    costCenterId: '2',
-    fiscalYearId: '1',
-    status: 'inactive',
-    companyId: '2',
-    createdAt: '2023-06-20',
-    updatedAt: '2023-12-15',
-    createdBy: 'Juliana Costa',
-    notes: 'Contrato suspenso temporariamente'
-  }
-];
+// Função para converter dados do Supabase para o formato da aplicação
+const mapSupabaseToContract = (data: any): Contract => ({
+  id: data.id,
+  name: data.name,
+  description: data.description,
+  contractNumber: data.contract_number,
+  contractType: data.contract_type,
+  startDate: data.start_date,
+  endDate: data.end_date,
+  value: parseFloat(data.value) || 0,
+  currency: data.currency,
+  recurrenceType: data.recurrence_type,
+  nextPaymentDate: data.next_payment_date,
+  partnerName: data.partner_name,
+  costCenterId: data.cost_center_id,
+  fiscalYearId: data.fiscal_year_id,
+  status: data.status,
+  attachments: data.attachments,
+  notes: data.notes,
+  companyId: data.company_id,
+  createdAt: data.created_at?.split('T')[0] || '',
+  updatedAt: data.updated_at?.split('T')[0] || '',
+  createdBy: data.created_by
+});
+
+// Função para converter dados da aplicação para o formato do Supabase
+const mapContractToSupabase = (contract: ContractFormData) => ({
+  name: contract.name,
+  description: contract.description,
+  contract_number: contract.contractNumber,
+  contract_type: contract.contractType,
+  start_date: contract.startDate,
+  end_date: contract.endDate,
+  value: contract.value,
+  currency: contract.currency,
+  recurrence_type: contract.recurrenceType,
+  next_payment_date: contract.nextPaymentDate,
+  partner_name: contract.partnerName,
+  cost_center_id: contract.costCenterId,
+  fiscal_year_id: contract.fiscalYearId,
+  status: contract.status,
+  notes: contract.notes
+});
 
 export function useContracts() {
-  const { activeCompany } = useAuth();
+  const { activeCompany, user } = useAuth();
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Simula uma chamada de API
     const fetchContracts = async () => {
+      if (!activeCompany) {
+        setContracts([]);
+        setIsLoading(false);
+        return;
+      }
+
       setIsLoading(true);
       setError(null);
       
       try {
-        // Simula um delay de rede
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        // Filtra contratos pela empresa ativa
-        const filteredContracts = activeCompany 
-          ? mockContracts.filter(contract => contract.companyId === activeCompany.id)
-          : mockContracts;
-        
-        setContracts(filteredContracts);
+        const { data, error } = await supabase
+          .from('contracts')
+          .select('*')
+          .eq('company_id', activeCompany.id)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        const mappedContracts = data?.map(mapSupabaseToContract) || [];
+        setContracts(mappedContracts);
       } catch (err) {
-        setError('Erro ao carregar contratos. Por favor, tente novamente.');
         console.error('Erro ao buscar contratos:', err);
+        setError('Erro ao carregar contratos. Por favor, tente novamente.');
       } finally {
         setIsLoading(false);
       }
@@ -191,87 +87,76 @@ export function useContracts() {
   }, [activeCompany]);
 
   const addContract = async (contractData: ContractFormData): Promise<Contract> => {
-    setIsLoading(true);
-    
     try {
-      // Simula um delay de rede
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
       if (!activeCompany) {
         throw new Error('Nenhuma empresa ativa selecionada');
       }
-      
-      const newContract: Contract = {
-        id: Date.now().toString(),
-        ...contractData,
-        companyId: activeCompany.id,
-        createdAt: new Date().toISOString().split('T')[0],
-        updatedAt: new Date().toISOString().split('T')[0],
-        createdBy: 'Usuário Atual' // Em uma implementação real, viria do contexto de autenticação
+
+      const supabaseData = {
+        ...mapContractToSupabase(contractData),
+        company_id: activeCompany.id,
+        created_by: user?.name || 'Usuário Atual'
       };
-      
+
+      const { data, error } = await supabase
+        .from('contracts')
+        .insert([supabaseData])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const newContract = mapSupabaseToContract(data);
       setContracts(prev => [newContract, ...prev]);
+      
       return newContract;
     } catch (err) {
-      setError('Erro ao adicionar contrato. Por favor, tente novamente.');
       console.error('Erro ao adicionar contrato:', err);
+      setError('Erro ao adicionar contrato. Por favor, tente novamente.');
       throw err;
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const updateContract = async (id: string, updates: Partial<ContractFormData>): Promise<Contract> => {
-    setIsLoading(true);
-    
     try {
-      // Simula um delay de rede
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      let updatedContract: Contract | undefined;
-      
+      const supabaseUpdates = mapContractToSupabase(updates as ContractFormData);
+
+      const { data, error } = await supabase
+        .from('contracts')
+        .update(supabaseUpdates)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const updatedContract = mapSupabaseToContract(data);
       setContracts(prev => 
-        prev.map(contract => {
-          if (contract.id === id) {
-            updatedContract = {
-              ...contract,
-              ...updates,
-              updatedAt: new Date().toISOString().split('T')[0]
-            };
-            return updatedContract;
-          }
-          return contract;
-        })
+        prev.map(contract => contract.id === id ? updatedContract : contract)
       );
-      
-      if (!updatedContract) {
-        throw new Error('Contrato não encontrado');
-      }
       
       return updatedContract;
     } catch (err) {
-      setError('Erro ao atualizar contrato. Por favor, tente novamente.');
       console.error('Erro ao atualizar contrato:', err);
+      setError('Erro ao atualizar contrato. Por favor, tente novamente.');
       throw err;
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const deleteContract = async (id: string): Promise<void> => {
-    setIsLoading(true);
-    
     try {
-      // Simula um delay de rede
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      const { error } = await supabase
+        .from('contracts')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
       setContracts(prev => prev.filter(contract => contract.id !== id));
     } catch (err) {
-      setError('Erro ao excluir contrato. Por favor, tente novamente.');
       console.error('Erro ao excluir contrato:', err);
+      setError('Erro ao excluir contrato. Por favor, tente novamente.');
       throw err;
-    } finally {
-      setIsLoading(false);
     }
   };
 

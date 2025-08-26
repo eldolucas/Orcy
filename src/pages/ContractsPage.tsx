@@ -40,7 +40,7 @@ export function ContractsPage() {
       await addContract(formData);
       setShowCreateModal(false);
     } catch (err) {
-      // Error is handled in the hook and displayed in the UI
+      alert(err instanceof Error ? err.message : 'Erro ao criar contrato');
     }
   };
 
@@ -56,7 +56,7 @@ export function ContractsPage() {
         setContractToEdit(null);
         setShowCreateModal(false);
       } catch (err) {
-        // Error is handled in the hook and displayed in the UI
+        alert(err instanceof Error ? err.message : 'Erro ao atualizar contrato');
       }
     }
   };
