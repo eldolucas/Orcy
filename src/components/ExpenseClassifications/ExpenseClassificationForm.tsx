@@ -5,7 +5,8 @@ import { ExpenseClassification, ExpenseClassificationFormData, expenseTypeLabels
 interface ExpenseClassificationFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (classification: ExpenseClassificationFormData) => void;
+  onSave: (classification: ExpenseClassificationFormData) => void | Promise<void>;
+  onDelete?: (id: string) => Promise<void>; // ← Opção B: deleção vem do pai
   initialData?: ExpenseClassification | null;
 }
 
@@ -13,6 +14,7 @@ export function ExpenseClassificationForm({
   isOpen, 
   onClose, 
   onSave, 
+  onDelete,
   initialData 
 }: ExpenseClassificationFormProps) {
   const [formData, setFormData] = useState<ExpenseClassificationFormData>({
@@ -24,67 +26,68 @@ export function ExpenseClassificationForm({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Inicializa o formulário com os dados iniciais quando estiver editando
+  // Preenche/Reseta formulário conforme edição/criação
   useEffect(() => {
     if (initialData) {
       setFormData({
         name: initialData.name,
         type: initialData.type,
         code: initialData.code,
-        description: initialData.description,
+        description: initialData.description ?? '',
         isActive: initialData.isActive
       });
     } else {
-      // Reset do formulário quando for uma nova classificação
       setFormData({
         name: '',
         type: 'expense',
         code: '',
-      }
-      )
-      updateExpenseClassification(classificationToEdit.id, classificationData)
-        .then(() => {
-          setClassificationToEdit(null);
-          setShowCreateModal(false);
-        })
-        .catch(() => {
-          // Error is handled in the hook and displayed in the UI
-        });
+        description: '',
+        isActive: true
+      });
     }
     setErrors({});
   }, [initialData, isOpen]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const isEditing = !!initialData;
+  const modalTitle = isEditing ? 'Editar Classificação de Gasto' : 'Nova Classificação de Gasto';
+  const submitButtonText = isEditing ? 'Salvar Alterações' : 'Criar Classificação';
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validação
     const newErrors: Record<string, string> = {};
-    
     if (!formData.name.trim()) newErrors.name = 'Nome é obrigatório';
     if (!formData.code.trim()) newErrors.code = 'Código é obrigatório';
     if (!formData.type) newErrors.type = 'Tipo é obrigatório';
-
     setErrors(newErrors);
 
-    if (Object.keys(newErrors).length === 0) {
-      onSave(formData);
+    if (Object.keys(newErrors).length > 0) return;
+
+    try {
+      setIsSubmitting(true);
+      await Promise.resolve(onSave(formData));
+      onClose();
+    } finally {
+      setIsSubmitting(false);
     }
-    addExpenseClassification(classificationData)
-      .then(() => {
-        setShowCreateModal(false);
-      })
-      .catch(() => {
-        // Error is handled in the hook and displayed in the UI
-      });
   };
 
-  const isEditing = !!initialData;
-  const modalTitle = isEditing ? 'Editar Classificação de Gasto' : 'Nova Classificação de Gasto';
-      deleteExpenseClassification(id)
-        .catch(() => {
-          // Error is handled in the hook and displayed in the UI
-        });
+  const handleDelete = async () => {
+    if (!initialData?.id || !onDelete) return;
+    const confirmed = window.confirm('Tem certeza que deseja excluir esta classificação?');
+    if (!confirmed) return;
+
+    try {
+      setIsSubmitting(true);
+      await onDelete(initialData.id as unknown as string);
+      onClose();
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -101,6 +104,7 @@ export function ExpenseClassificationForm({
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            disabled={isSubmitting}
           >
             <X className="w-5 h-5 text-gray-600" />
           </button>
@@ -121,6 +125,7 @@ export function ExpenseClassificationForm({
                   errors.name ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="Ex: Salários, Marketing Digital, etc."
+                disabled={isSubmitting}
               />
               {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
             </div>
@@ -138,6 +143,7 @@ export function ExpenseClassificationForm({
                 }`}
                 placeholder="Ex: SAL, MKT, etc."
                 maxLength={10}
+                disabled={isSubmitting}
               />
               {errors.code && <p className="text-red-500 text-xs mt-1">{errors.code}</p>}
             </div>
@@ -164,6 +170,7 @@ export function ExpenseClassificationForm({
                     checked={formData.type === value}
                     onChange={() => setFormData({ ...formData, type: value as any })}
                     className="sr-only"
+                    disabled={isSubmitting}
                   />
                   <span>{label}</span>
                 </label>
@@ -184,6 +191,7 @@ export function ExpenseClassificationForm({
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 placeholder="Descrição detalhada da classificação de gasto..."
+                disabled={isSubmitting}
               />
             </div>
           </div>
@@ -195,27 +203,50 @@ export function ExpenseClassificationForm({
                 checked={formData.isActive}
                 onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                 className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+                disabled={isSubmitting}
               />
               <span className="ml-2 text-sm text-gray-700">Classificação Ativa</span>
             </label>
           </div>
 
           {/* Ações */}
-          <div className="flex items-center justify-end space-x-3 pt-6 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
-            >
-              <Save className="w-4 h-4" />
-              <span>{submitButtonText}</span>
-            </button>
+          <div className="flex items-center justify-between pt-6 border-t border-gray-200">
+            {/* Botão excluir só quando editando e com onDelete disponível */}
+            <div>
+              {isEditing && onDelete && (
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  className="px-4 py-2 text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50"
+                  disabled={isSubmitting}
+                >
+                  Excluir
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                disabled={isSubmitting}
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
+                <span>{submitButtonText}</span>
+              </button>
+            </div>
           </div>
         </form>
       </div>
