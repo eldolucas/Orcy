@@ -13,6 +13,7 @@ import { ExpenseClassificationsPage } from './pages/ExpenseClassificationsPage';
 import { LaborBudgetPage } from './pages/LaborBudgetPage';
 import { ContractsPage } from './pages/ContractsPage';
 import { FixedAssetsPage } from './pages/FixedAssetsPage';
+import { BusinessGroupsPage } from "./pages/BusinessGroups/BusinessGroupsPage";
 import { Sidebar } from './components/Layout/Sidebar';
 import { Header } from './components/Layout/Header';
 
