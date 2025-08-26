@@ -327,6 +327,53 @@ export type Database = {
       };
     };
   };
+      labor_budget: {
+        Row: {
+          id: string;
+          position: string;
+          department: string;
+          base_salary: number;
+          benefits: any; // jsonb
+          charges: any; // jsonb
+          quantity: number;
+          total_cost: number;
+          cost_center_id: string;
+          fiscal_year_id: string;
+          is_active: boolean;
+          company_id: string;
+          created_at: string;
+          updated_at: string;
+          created_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          position: string;
+          department: string;
+          base_salary: number;
+          benefits: any;
+          charges: any;
+          quantity: number;
+          total_cost: number;
+          cost_center_id: string;
+          fiscal_year_id: string;
+          is_active?: boolean;
+          company_id: string;
+          created_by?: string | null;
+        };
+        Update: {
+          position?: string;
+          department?: string;
+          base_salary?: number;
+          benefits?: any;
+          charges?: any;
+          quantity?: number;
+          total_cost?: number;
+          cost_center_id?: string;
+          fiscal_year_id?: string;
+          is_active?: boolean;
+          updated_at?: string;
+        };
+      };
 
       cost_centers: {
         Row: {

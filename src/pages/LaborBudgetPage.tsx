@@ -40,7 +40,7 @@ export function LaborBudgetPage() {
       await addLaborBudget(formData);
       setShowCreateModal(false);
     } catch (err) {
-      // Error is handled in the hook and displayed in the UI
+      alert(err instanceof Error ? err.message : 'Erro ao criar registro de mão de obra');
     }
   };
 
@@ -56,7 +56,7 @@ export function LaborBudgetPage() {
         setLaborToEdit(null);
         setShowCreateModal(false);
       } catch (err) {
-        // Error is handled in the hook and displayed in the UI
+        alert(err instanceof Error ? err.message : 'Erro ao atualizar registro de mão de obra');
       }
     }
   };

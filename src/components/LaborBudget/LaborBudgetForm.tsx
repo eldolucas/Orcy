@@ -89,10 +89,10 @@ export function LaborBudgetForm({
     
     if (!formData.position.trim()) newErrors.position = 'Cargo/Função é obrigatório';
     if (!formData.department.trim()) newErrors.department = 'Departamento é obrigatório';
-    if (!formData.baseSalary || formData.baseSalary <= 0) {
+    if (formData.baseSalary <= 0) {
       newErrors.baseSalary = 'Salário base deve ser maior que zero';
     }
-    if (!formData.quantity || formData.quantity <= 0) {
+    if (formData.quantity <= 0) {
       newErrors.quantity = 'Quantidade deve ser maior que zero';
     }
     if (!formData.costCenterId) newErrors.costCenterId = 'Centro de custo é obrigatório';
@@ -113,8 +113,11 @@ export function LaborBudgetForm({
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
-      onSave(formData);
-      onClose();
+      try {
+        onSave(formData);
+      } catch (err) {
+        // Error handling is done in the parent component
+      }
     } else {
       // Se houver erros, muda para a aba que contém o primeiro erro
       const firstErrorField = Object.keys(newErrors)[0];
