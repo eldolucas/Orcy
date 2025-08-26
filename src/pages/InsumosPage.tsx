@@ -23,8 +23,13 @@ export function InsumosPage() {
   const [insumoToEdit, setInsumoToEdit] = useState<Insumo | null>(null);
 
   const handleCreateInsumo = (insumoData: any) => {
-    addInsumo(insumoData);
-    setShowCreateModal(false);
+    addInsumo(insumoData)
+      .then(() => {
+        setShowCreateModal(false);
+      })
+      .catch(() => {
+        // Error is handled in the hook and displayed in the UI
+      });
   };
 
   const handleEditInsumo = (insumo: Insumo) => {
@@ -34,15 +39,23 @@ export function InsumosPage() {
 
   const handleUpdateInsumo = (insumoData: any) => {
     if (insumoToEdit) {
-      updateInsumo(insumoToEdit.id, insumoData);
-      setInsumoToEdit(null);
-      setShowCreateModal(false);
+      updateInsumo(insumoToEdit.id, insumoData)
+        .then(() => {
+          setInsumoToEdit(null);
+          setShowCreateModal(false);
+        })
+        .catch(() => {
+          // Error is handled in the hook and displayed in the UI
+        });
     }
   };
 
   const handleDeleteInsumo = (id: string) => {
     if (window.confirm('Tem certeza que deseja excluir este insumo? Esta ação não pode ser desfeita.')) {
-      deleteInsumo(id);
+      deleteInsumo(id)
+        .catch(() => {
+          // Error is handled in the hook and displayed in the UI
+        });
     }
   };
 

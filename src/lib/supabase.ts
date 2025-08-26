@@ -290,6 +290,41 @@ export type Database = {
           last_updated?: string;
         };
       };
+      insumos: {
+        Row: {
+          id: string;
+          name: string;
+          description: string | null;
+          type: 'product' | 'service' | 'fund';
+          unit: string;
+          cost: number;
+          is_active: boolean;
+          company_id: string;
+          created_at: string;
+          updated_at: string;
+          created_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          description?: string | null;
+          type: 'product' | 'service' | 'fund';
+          unit: string;
+          cost: number;
+          is_active?: boolean;
+          company_id: string;
+          created_by?: string | null;
+        };
+        Update: {
+          name?: string;
+          description?: string | null;
+          type?: 'product' | 'service' | 'fund';
+          unit?: string;
+          cost?: number;
+          is_active?: boolean;
+          updated_at?: string;
+        };
+      };
     };
   };
 

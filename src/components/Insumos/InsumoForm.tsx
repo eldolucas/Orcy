@@ -60,13 +60,12 @@ export function InsumoForm({
     if (!formData.name.trim()) newErrors.name = 'Nome é obrigatório';
     if (!formData.unit.trim()) newErrors.unit = 'Unidade é obrigatória';
     if (!formData.type) newErrors.type = 'Tipo é obrigatório';
-    if (formData.cost <= 0) newErrors.cost = 'Custo deve ser maior que zero';
+    if (formData.cost < 0) newErrors.cost = 'Custo deve ser maior ou igual a zero';
 
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
       onSave(formData);
-      onClose();
     }
   };
 
