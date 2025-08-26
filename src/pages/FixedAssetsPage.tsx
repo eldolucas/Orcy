@@ -40,7 +40,7 @@ export function FixedAssetsPage() {
       await addFixedAsset(formData);
       setShowCreateModal(false);
     } catch (err) {
-      // Error is handled in the hook and displayed in the UI
+      alert(err instanceof Error ? err.message : 'Erro ao criar ativo imobilizado');
     }
   };
 
@@ -56,7 +56,7 @@ export function FixedAssetsPage() {
         setAssetToEdit(null);
         setShowCreateModal(false);
       } catch (err) {
-        // Error is handled in the hook and displayed in the UI
+        alert(err instanceof Error ? err.message : 'Erro ao atualizar ativo imobilizado');
       }
     }
   };

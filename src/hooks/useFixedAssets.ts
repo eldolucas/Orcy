@@ -1,194 +1,90 @@
 import { useState, useEffect } from 'react';
 import { FixedAsset, FixedAssetFormData } from '../types/fixedAsset';
+import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
-// Mock data para ativos imobilizados
-const mockFixedAssets: FixedAsset[] = [
-  {
-    id: '1',
-    name: 'Notebook Dell XPS 15',
-    description: 'Notebook para equipe de desenvolvimento',
-    category: 'equipment',
-    acquisitionDate: '2023-06-15',
-    acquisitionValue: 12000,
-    depreciationRate: 20,
-    depreciationMethod: 'linear',
-    usefulLifeYears: 5,
-    currentValue: 9600, // 80% do valor original após 1 ano
-    status: 'active',
-    costCenterId: '11',
-    fiscalYearId: '1',
-    supplier: 'Dell Computadores',
-    invoiceNumber: 'NF-12345',
-    serialNumber: 'XPS15-789456',
-    location: 'Escritório Central - Andar 2',
-    companyId: '1',
-    createdAt: '2023-06-15',
-    updatedAt: '2023-06-15',
-    createdBy: 'João Silva'
-  },
-  {
-    id: '2',
-    name: 'Veículo Utilitário',
-    description: 'Veículo para transporte de equipamentos',
-    category: 'vehicle',
-    acquisitionDate: '2022-03-10',
-    acquisitionValue: 85000,
-    depreciationRate: 10,
-    depreciationMethod: 'linear',
-    usefulLifeYears: 10,
-    currentValue: 68000, // 80% do valor original após 2 anos
-    status: 'active',
-    costCenterId: '2',
-    fiscalYearId: '1',
-    supplier: 'Concessionária ABC',
-    invoiceNumber: 'NF-78945',
-    serialNumber: 'VIN-123456789',
-    location: 'Garagem Corporativa',
-    companyId: '1',
-    createdAt: '2022-03-10',
-    updatedAt: '2022-03-10',
-    createdBy: 'Maria Santos'
-  },
-  {
-    id: '3',
-    name: 'Mobiliário para Escritório',
-    description: 'Conjunto de mesas, cadeiras e armários',
-    category: 'furniture',
-    acquisitionDate: '2023-01-20',
-    acquisitionValue: 35000,
-    depreciationRate: 10,
-    depreciationMethod: 'linear',
-    usefulLifeYears: 10,
-    currentValue: 31500, // 90% do valor original após 1 ano
-    status: 'active',
-    costCenterId: '1',
-    fiscalYearId: '1',
-    supplier: 'Móveis Corporativos Ltda',
-    invoiceNumber: 'NF-45678',
-    location: 'Escritório Central - Andar 1',
-    companyId: '1',
-    createdAt: '2023-01-20',
-    updatedAt: '2023-01-20',
-    createdBy: 'Pedro Costa'
-  },
-  {
-    id: '4',
-    name: 'Licenças de Software ERP',
-    description: 'Licenças perpétuas do sistema ERP',
-    category: 'software',
-    acquisitionDate: '2023-09-05',
-    acquisitionValue: 120000,
-    depreciationRate: 20,
-    depreciationMethod: 'linear',
-    usefulLifeYears: 5,
-    currentValue: 112000, // 93% do valor original após alguns meses
-    status: 'active',
-    costCenterId: '13',
-    fiscalYearId: '1',
-    supplier: 'Software Solutions Inc.',
-    invoiceNumber: 'NF-98765',
-    serialNumber: 'LIC-ERP-123456',
-    companyId: '1',
-    createdAt: '2023-09-05',
-    updatedAt: '2023-09-05',
-    createdBy: 'Ana Rodrigues'
-  },
-  {
-    id: '5',
-    name: 'Servidor de Rede',
-    description: 'Servidor para infraestrutura de TI',
-    category: 'equipment',
-    acquisitionDate: '2024-01-10',
-    acquisitionValue: 45000,
-    depreciationRate: 20,
-    depreciationMethod: 'linear',
-    usefulLifeYears: 5,
-    currentValue: 45000, // Recém adquirido
-    status: 'active',
-    costCenterId: '12',
-    fiscalYearId: '1',
-    supplier: 'Tech Infrastructure Ltd',
-    invoiceNumber: 'NF-54321',
-    serialNumber: 'SRV-987654',
-    location: 'Sala de Servidores',
-    companyId: '1',
-    createdAt: '2024-01-10',
-    updatedAt: '2024-01-10',
-    createdBy: 'Carlos Oliveira'
-  },
-  {
-    id: '6',
-    name: 'Impressora Multifuncional',
-    description: 'Impressora para departamento de marketing',
-    category: 'equipment',
-    acquisitionDate: '2022-11-15',
-    acquisitionValue: 8500,
-    depreciationRate: 20,
-    depreciationMethod: 'linear',
-    usefulLifeYears: 5,
-    currentValue: 5950, // 70% do valor original após 1.5 anos
-    status: 'inactive',
-    costCenterId: '21',
-    fiscalYearId: '1',
-    supplier: 'Office Tech Solutions',
-    invoiceNumber: 'NF-13579',
-    serialNumber: 'IMP-246810',
-    location: 'Departamento de Marketing',
-    companyId: '2',
-    createdAt: '2022-11-15',
-    updatedAt: '2023-12-20',
-    createdBy: 'Roberto Lima'
-  },
-  {
-    id: '7',
-    name: 'Terreno para Nova Filial',
-    description: 'Terreno adquirido para construção de nova filial',
-    category: 'land',
-    acquisitionDate: '2023-05-20',
-    acquisitionValue: 500000,
-    depreciationRate: 0,
-    depreciationMethod: 'none',
-    usefulLifeYears: 0,
-    currentValue: 550000, // Valorização de 10%
-    status: 'active',
-    costCenterId: '3',
-    fiscalYearId: '1',
-    supplier: 'Imobiliária Central',
-    invoiceNumber: 'ESC-24680',
-    location: 'Zona Industrial - Lote 123',
-    companyId: '2',
-    createdAt: '2023-05-20',
-    updatedAt: '2023-05-20',
-    createdBy: 'Juliana Costa'
-  }
-];
+// Função para converter dados do Supabase para o formato da aplicação
+const mapSupabaseToFixedAsset = (data: any): FixedAsset => ({
+  id: data.id,
+  name: data.name,
+  description: data.description,
+  category: data.category,
+  acquisitionDate: data.acquisition_date,
+  acquisitionValue: parseFloat(data.acquisition_value) || 0,
+  depreciationRate: parseFloat(data.depreciation_rate) || 0,
+  depreciationMethod: data.depreciation_method,
+  usefulLifeYears: data.useful_life_years || 0,
+  currentValue: parseFloat(data.current_value) || 0,
+  status: data.status,
+  disposalDate: data.disposal_date,
+  disposalValue: data.disposal_value ? parseFloat(data.disposal_value) : undefined,
+  costCenterId: data.cost_center_id,
+  fiscalYearId: data.fiscal_year_id,
+  supplier: data.supplier,
+  invoiceNumber: data.invoice_number,
+  serialNumber: data.serial_number,
+  location: data.location,
+  notes: data.notes,
+  companyId: data.company_id,
+  createdAt: data.created_at?.split('T')[0] || '',
+  updatedAt: data.updated_at?.split('T')[0] || '',
+  createdBy: data.created_by
+});
+
+// Função para converter dados da aplicação para o formato do Supabase
+const mapFixedAssetToSupabase = (asset: FixedAssetFormData & { currentValue: number }) => ({
+  name: asset.name,
+  description: asset.description,
+  category: asset.category,
+  acquisition_date: asset.acquisitionDate,
+  acquisition_value: asset.acquisitionValue,
+  depreciation_rate: asset.depreciationRate,
+  depreciation_method: asset.depreciationMethod,
+  useful_life_years: asset.usefulLifeYears,
+  current_value: asset.currentValue,
+  status: asset.status,
+  disposal_date: asset.disposalDate,
+  disposal_value: asset.disposalValue,
+  cost_center_id: asset.costCenterId,
+  fiscal_year_id: asset.fiscalYearId,
+  supplier: asset.supplier,
+  invoice_number: asset.invoiceNumber,
+  serial_number: asset.serialNumber,
+  location: asset.location,
+  notes: asset.notes
+});
 
 export function useFixedAssets() {
-  const { activeCompany } = useAuth();
+  const { activeCompany, user } = useAuth();
   const [fixedAssets, setFixedAssets] = useState<FixedAsset[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Simula uma chamada de API
     const fetchFixedAssets = async () => {
+      if (!activeCompany) {
+        setFixedAssets([]);
+        setIsLoading(false);
+        return;
+      }
+
       setIsLoading(true);
       setError(null);
       
       try {
-        // Simula um delay de rede
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        // Filtra ativos pela empresa ativa
-        const filteredAssets = activeCompany 
-          ? mockFixedAssets.filter(asset => asset.companyId === activeCompany.id)
-          : mockFixedAssets;
-        
-        setFixedAssets(filteredAssets);
+        const { data, error } = await supabase
+          .from('fixed_assets')
+          .select('*')
+          .eq('company_id', activeCompany.id)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        const mappedFixedAssets = data?.map(mapSupabaseToFixedAsset) || [];
+        setFixedAssets(mappedFixedAssets);
       } catch (err) {
-        setError('Erro ao carregar ativos imobilizados. Por favor, tente novamente.');
         console.error('Erro ao buscar ativos imobilizados:', err);
+        setError('Erro ao carregar ativos imobilizados. Por favor, tente novamente.');
       } finally {
         setIsLoading(false);
       }
@@ -197,112 +93,140 @@ export function useFixedAssets() {
     fetchFixedAssets();
   }, [activeCompany]);
 
-  const addFixedAsset = async (assetData: FixedAssetFormData): Promise<FixedAsset> => {
-    setIsLoading(true);
+  const calculateYearsElapsed = (acquisitionDate: string): number => {
+    const today = new Date();
+    const acquisition = new Date(acquisitionDate);
+    return (today.getTime() - acquisition.getTime()) / (1000 * 60 * 60 * 24 * 365);
+  };
+
+  const calculateCurrentValue = (asset: FixedAssetFormData): number => {
+    if (asset.status === 'planned' || asset.depreciationMethod === 'none') {
+      return asset.acquisitionValue;
+    }
     
+    const yearsElapsed = calculateYearsElapsed(asset.acquisitionDate);
+    let totalDepreciation = 0;
+    
+    switch (asset.depreciationMethod) {
+      case 'linear':
+        totalDepreciation = Math.min(yearsElapsed * asset.depreciationRate, 100);
+        break;
+      case 'accelerated':
+        // Método acelerado: depreciação maior nos primeiros anos
+        totalDepreciation = Math.min(yearsElapsed * asset.depreciationRate * 1.5, 100);
+        break;
+      default:
+        totalDepreciation = 0;
+    }
+    
+    return Math.max(0, asset.acquisitionValue * (1 - totalDepreciation / 100));
+  };
+
+  const addFixedAsset = async (assetData: FixedAssetFormData): Promise<FixedAsset> => {
     try {
-      // Simula um delay de rede
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
       if (!activeCompany) {
         throw new Error('Nenhuma empresa ativa selecionada');
       }
       
-      // Calcula o valor atual (igual ao valor de aquisição para novos ativos)
-      const currentValue = assetData.status === 'planned' ? 0 : assetData.acquisitionValue;
+      // Calcula o valor atual
+      const currentValue = calculateCurrentValue(assetData);
       
-      const newAsset: FixedAsset = {
-        id: Date.now().toString(),
-        ...assetData,
-        currentValue,
-        companyId: activeCompany.id,
-        createdAt: new Date().toISOString().split('T')[0],
-        updatedAt: new Date().toISOString().split('T')[0],
-        createdBy: 'Usuário Atual' // Em uma implementação real, viria do contexto de autenticação
+      const supabaseData = {
+        ...mapFixedAssetToSupabase({ ...assetData, currentValue }),
+        company_id: activeCompany.id,
+        created_by: user?.name || 'Usuário Atual'
       };
+
+      const { data, error } = await supabase
+        .from('fixed_assets')
+        .insert([supabaseData])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const newFixedAsset = mapSupabaseToFixedAsset(data);
+      setFixedAssets(prev => [newFixedAsset, ...prev]);
       
-      setFixedAssets(prev => [newAsset, ...prev]);
-      return newAsset;
+      return newFixedAsset;
     } catch (err) {
-      setError('Erro ao adicionar ativo imobilizado. Por favor, tente novamente.');
       console.error('Erro ao adicionar ativo imobilizado:', err);
+      setError('Erro ao adicionar ativo imobilizado. Por favor, tente novamente.');
       throw err;
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const updateFixedAsset = async (id: string, updates: Partial<FixedAssetFormData>): Promise<FixedAsset> => {
-    setIsLoading(true);
-    
     try {
-      // Simula um delay de rede
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      let updatedAsset: FixedAsset | undefined;
-      
-      setFixedAssets(prev => 
-        prev.map(asset => {
-          if (asset.id === id) {
-            // Se o status mudou para "disposed", verifica se tem data de baixa
-            const needsDisposalDate = updates.status === 'disposed' && !updates.disposalDate && !asset.disposalDate;
-            
-            // Se o valor de aquisição mudou, recalcula o valor atual
-            let currentValue = asset.currentValue;
-            if (updates.acquisitionValue !== undefined && updates.acquisitionValue !== asset.acquisitionValue) {
-              // Simplificação: para ativos planejados, o valor atual é zero
-              // Para outros, é o valor de aquisição ajustado pela depreciação
-              if (asset.status === 'planned' || updates.status === 'planned') {
-                currentValue = 0;
-              } else {
-                const yearsElapsed = calculateYearsElapsed(asset.acquisitionDate);
-                const depreciationRate = updates.depreciationRate !== undefined ? updates.depreciationRate : asset.depreciationRate;
-                const totalDepreciation = Math.min(yearsElapsed * depreciationRate, 100);
-                currentValue = updates.acquisitionValue * (1 - totalDepreciation / 100);
-              }
-            }
-            
-            updatedAsset = {
-              ...asset,
-              ...updates,
-              currentValue,
-              disposalDate: needsDisposalDate ? new Date().toISOString().split('T')[0] : updates.disposalDate || asset.disposalDate,
-              updatedAt: new Date().toISOString().split('T')[0]
-            };
-            return updatedAsset;
-          }
-          return asset;
-        })
-      );
-      
-      if (!updatedAsset) {
+      // Busca o ativo atual para calcular o novo valor
+      const currentAsset = fixedAssets.find(a => a.id === id);
+      if (!currentAsset) {
         throw new Error('Ativo imobilizado não encontrado');
       }
       
-      return updatedAsset;
+      // Mescla os dados atuais com as atualizações
+      const updatedData = {
+        name: updates.name ?? currentAsset.name,
+        description: updates.description ?? currentAsset.description,
+        category: updates.category ?? currentAsset.category,
+        acquisitionDate: updates.acquisitionDate ?? currentAsset.acquisitionDate,
+        acquisitionValue: updates.acquisitionValue ?? currentAsset.acquisitionValue,
+        depreciationRate: updates.depreciationRate ?? currentAsset.depreciationRate,
+        depreciationMethod: updates.depreciationMethod ?? currentAsset.depreciationMethod,
+        usefulLifeYears: updates.usefulLifeYears ?? currentAsset.usefulLifeYears,
+        status: updates.status ?? currentAsset.status,
+        disposalDate: updates.disposalDate ?? currentAsset.disposalDate,
+        disposalValue: updates.disposalValue ?? currentAsset.disposalValue,
+        costCenterId: updates.costCenterId ?? currentAsset.costCenterId,
+        fiscalYearId: updates.fiscalYearId ?? currentAsset.fiscalYearId,
+        supplier: updates.supplier ?? currentAsset.supplier,
+        invoiceNumber: updates.invoiceNumber ?? currentAsset.invoiceNumber,
+        serialNumber: updates.serialNumber ?? currentAsset.serialNumber,
+        location: updates.location ?? currentAsset.location,
+        notes: updates.notes ?? currentAsset.notes
+      };
+      
+      // Calcula o novo valor atual
+      const currentValue = calculateCurrentValue(updatedData);
+      
+      const supabaseUpdates = mapFixedAssetToSupabase({ ...updatedData, currentValue });
+
+      const { data, error } = await supabase
+        .from('fixed_assets')
+        .update(supabaseUpdates)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const updatedFixedAsset = mapSupabaseToFixedAsset(data);
+      setFixedAssets(prev => 
+        prev.map(asset => asset.id === id ? updatedFixedAsset : asset)
+      );
+      
+      return updatedFixedAsset;
     } catch (err) {
-      setError('Erro ao atualizar ativo imobilizado. Por favor, tente novamente.');
       console.error('Erro ao atualizar ativo imobilizado:', err);
+      setError('Erro ao atualizar ativo imobilizado. Por favor, tente novamente.');
       throw err;
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const deleteFixedAsset = async (id: string): Promise<void> => {
-    setIsLoading(true);
-    
     try {
-      // Simula um delay de rede
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      const { error } = await supabase
+        .from('fixed_assets')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
       setFixedAssets(prev => prev.filter(asset => asset.id !== id));
     } catch (err) {
-      setError('Erro ao excluir ativo imobilizado. Por favor, tente novamente.');
       console.error('Erro ao excluir ativo imobilizado:', err);
+      setError('Erro ao excluir ativo imobilizado. Por favor, tente novamente.');
       throw err;
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -368,19 +292,24 @@ export function useFixedAssets() {
     return fixedAssets.reduce((sum, asset) => sum + (asset.acquisitionValue - asset.currentValue), 0);
   };
 
-  const calculateYearsElapsed = (acquisitionDate: string): number => {
-    const today = new Date();
-    const acquisition = new Date(acquisitionDate);
-    return (today.getTime() - acquisition.getTime()) / (1000 * 60 * 60 * 24 * 365);
-  };
-
   const calculateDepreciation = (asset: FixedAsset): number => {
     if (asset.depreciationMethod === 'none' || asset.status === 'planned') {
       return 0;
     }
     
     const yearsElapsed = calculateYearsElapsed(asset.acquisitionDate);
-    const totalDepreciation = Math.min(yearsElapsed * asset.depreciationRate, 100);
+    let totalDepreciation = 0;
+    
+    switch (asset.depreciationMethod) {
+      case 'linear':
+        totalDepreciation = Math.min(yearsElapsed * asset.depreciationRate, 100);
+        break;
+      case 'accelerated':
+        totalDepreciation = Math.min(yearsElapsed * asset.depreciationRate * 1.5, 100);
+        break;
+      default:
+        totalDepreciation = 0;
+    }
     
     return asset.acquisitionValue * (totalDepreciation / 100);
   };

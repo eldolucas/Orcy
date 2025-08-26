@@ -121,8 +121,11 @@ export function FixedAssetForm({
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
-      onSave(formData);
-      onClose();
+      try {
+        onSave(formData);
+      } catch (err) {
+        // Error handling is done in the parent component
+      }
     } else {
       // Se houver erros, muda para a aba que contém o primeiro erro
       const firstErrorField = Object.keys(newErrors)[0];
