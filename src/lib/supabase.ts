@@ -292,4 +292,59 @@ export type Database = {
       };
     };
   };
+
+      cost_centers: {
+        Row: {
+          id: string;
+          name: string;
+          code: string;
+          description: string;
+          department: string;
+          manager: string;
+          parent_id: string | null;
+          level: number;
+          path: string;
+          budget: number;
+          spent: number;
+          allocated_budget: number;
+          inherited_budget: number;
+          status: 'active' | 'inactive';
+          company_id: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          code: string;
+          description: string;
+          department: string;
+          manager: string;
+          parent_id?: string | null;
+          level: number;
+          path: string;
+          budget: number;
+          spent?: number;
+          allocated_budget: number;
+          inherited_budget?: number;
+          status?: 'active' | 'inactive';
+          company_id: string;
+        };
+        Update: {
+          name?: string;
+          code?: string;
+          description?: string;
+          department?: string;
+          manager?: string;
+          parent_id?: string | null;
+          level?: number;
+          path?: string;
+          budget?: number;
+          spent?: number;
+          allocated_budget?: number;
+          inherited_budget?: number;
+          status?: 'active' | 'inactive';
+          updated_at?: string;
+        };
+      };
 };

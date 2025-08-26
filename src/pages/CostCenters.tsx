@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Plus, Search, Filter, Building2, BarChart3, Users, AlertTriangle, Download, Upload } from 'lucide-react';
 import { CostCenterCard } from '../components/CostCenters/CostCenterCard';
 import { CreateCostCenterModal } from '../components/CostCenters/CreateCostCenterModal';
+import { EditCostCenterModal } from '../components/CostCenters/EditCostCenterModal';
 import { useCostCenters } from '../hooks/useCostCenters';
 import { useAuth } from '../contexts/AuthContext';
 import { CostCenter } from '../types';
@@ -12,34 +13,53 @@ export function CostCenters() {
     costCenters, 
     hierarchicalCenters, 
     isLoading, 
+    error,
+    addCostCenter,
+    updateCostCenter,
+    deleteCostCenter,
     toggleExpansion, 
-    getFilteredCenters,
-    setCostCenters 
+    getFilteredCenters
   } = useCostCenters();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [costCenterToEdit, setCostCenterToEdit] = useState<CostCenter | null>(null);
   const [viewMode, setViewMode] = useState<'hierarchy' | 'flat'>('hierarchy');
 
-  const handleCreateCostCenter = (newCostCenter: Partial<CostCenter>) => {
-    const id = Date.now().toString();
-    const costCenter: CostCenter = {
-      id,
-      ...newCostCenter as Omit<CostCenter, 'id'>
-    };
-    
-    setCostCenters(prev => [...prev, costCenter]);
+  const handleCreateCostCenter = async (newCostCenter: Partial<CostCenter>) => {
+    try {
+      await addCostCenter(newCostCenter);
+      setShowCreateModal(false);
+    } catch (err) {
+      // Error is handled in the hook and displayed in the UI
+    }
   };
 
-  const handleEditCostCenter = (costCenter: CostCenter) => {
-    // TODO: Implement edit functionality
-    console.log('Edit cost center:', costCenter);
+  const handleEditCostCenter = async (costCenter: CostCenter) => {
+    setCostCenterToEdit(costCenter);
+    setShowEditModal(true);
   };
 
-  const handleDeleteCostCenter = (id: string) => {
-    // TODO: Implement delete functionality with confirmation
-    console.log('Delete cost center:', id);
+  const handleUpdateCostCenter = async (id: string, updates: Partial<CostCenter>) => {
+    try {
+      await updateCostCenter(id, updates);
+      setShowEditModal(false);
+      setCostCenterToEdit(null);
+    } catch (err) {
+      // Error is handled in the hook and displayed in the UI
+    }
+  };
+
+  const handleDeleteCostCenter = async (id: string) => {
+    if (window.confirm('Tem certeza que deseja excluir este centro de custo? Esta ação não pode ser desfeita.')) {
+      try {
+        await deleteCostCenter(id);
+      } catch (err) {
+        alert(err instanceof Error ? err.message : 'Erro ao excluir centro de custo');
+      }
+    }
   };
 
   const filteredCenters = getFilteredCenters(searchTerm, statusFilter);
@@ -79,6 +99,13 @@ export function CostCenters() {
           <span>Novo Centro</span>
         </button>
       </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <p>{error}</p>
+        </div>
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -283,6 +310,18 @@ export function CostCenters() {
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onSave={handleCreateCostCenter}
+        parentCostCenters={costCenters}
+      />
+
+      {/* Edit Modal */}
+      <EditCostCenterModal
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setCostCenterToEdit(null);
+        }}
+        onSave={handleUpdateCostCenter}
+        costCenter={costCenterToEdit}
         parentCostCenters={costCenters}
       />
     </div>

@@ -113,12 +113,14 @@ export function CostCenterCard({
             <button 
               onClick={() => onEdit(costCenter)}
               className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Editar centro de custo"
             >
               <Edit className="w-4 h-4" />
             </button>
             <button 
               onClick={() => onDelete(costCenter.id)}
               className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+              title="Excluir centro de custo"
             >
               <Trash2 className="w-4 h-4" />
             </button>

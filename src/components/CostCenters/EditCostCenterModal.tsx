@@ -1,20 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Building2, Save } from 'lucide-react';
 import { CostCenter } from '../../types';
 
-interface CreateCostCenterModalProps {
+interface EditCostCenterModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (costCenter: Partial<CostCenter>) => void;
+  onSave: (id: string, updates: Partial<CostCenter>) => Promise<void>;
+  costCenter: CostCenter | null;
   parentCostCenters: CostCenter[];
 }
 
-export function CreateCostCenterModal({ 
+export function EditCostCenterModal({ 
   isOpen, 
   onClose, 
   onSave, 
+  costCenter,
   parentCostCenters 
-}: CreateCostCenterModalProps) {
+}: EditCostCenterModalProps) {
   const [formData, setFormData] = useState({
     name: '',
     code: '',
@@ -27,11 +29,28 @@ export function CreateCostCenterModal({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
-
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (costCenter) {
+      setFormData({
+        name: costCenter.name,
+        code: costCenter.code,
+        description: costCenter.description,
+        department: costCenter.department,
+        manager: costCenter.manager,
+        parentId: costCenter.parentId || '',
+        budget: costCenter.budget.toString(),
+        status: costCenter.status
+      });
+    }
+    setErrors({});
+  }, [costCenter, isOpen]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!costCenter) return;
     
     // Validation
     const newErrors: Record<string, string> = {};
@@ -50,48 +69,38 @@ export function CreateCostCenterModal({
     if (Object.keys(newErrors).length === 0) {
       setIsSubmitting(true);
       
-      const parentCenter = parentCostCenters.find(c => c.id === formData.parentId);
-      const level = parentCenter ? parentCenter.level + 1 : 0;
-      const path = parentCenter ? `${parentCenter.path}/${formData.code}` : formData.code;
-
-      const costCenterData = {
-        ...formData,
-        budget: parseFloat(formData.budget),
-        spent: 0,
-        allocatedBudget: parseFloat(formData.budget),
-        inheritedBudget: 0,
-        level,
-        path,
-        parentId: formData.parentId || undefined,
-        createdAt: new Date().toISOString().split('T')[0],
-        status: formData.status as 'active' | 'inactive'
-      };
-
       try {
-        await onSave(costCenterData);
+        const parentCenter = parentCostCenters.find(c => c.id === formData.parentId);
+        const level = parentCenter ? parentCenter.level + 1 : 0;
+        const path = parentCenter ? `${parentCenter.path}/${formData.code}` : formData.code;
+
+        const updates = {
+          ...formData,
+          budget: parseFloat(formData.budget),
+          allocatedBudget: parseFloat(formData.budget),
+          level,
+          path,
+          parentId: formData.parentId || undefined,
+          status: formData.status as 'active' | 'inactive'
+        };
+
+        await onSave(costCenter.id, updates);
+        onClose();
       } catch (err) {
         // Error handling is done in the parent component
       } finally {
         setIsSubmitting(false);
       }
-
-      // Reset form
-      setFormData({
-        name: '',
-        code: '',
-        description: '',
-        department: '',
-        manager: '',
-        parentId: '',
-        budget: '',
-        status: 'active'
-      });
-      setErrors({});
-      onClose();
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !costCenter) return null;
+
+  // Filter out the current cost center and its children from parent options
+  const availableParents = parentCostCenters.filter(center => 
+    center.id !== costCenter.id && 
+    !center.path.startsWith(costCenter.path + '/')
+  );
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -101,7 +110,7 @@ export function CreateCostCenterModal({
             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
               <Building2 className="w-5 h-5 text-blue-600" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-800">Novo Centro de Custo</h2>
+            <h2 className="text-xl font-semibold text-gray-800">Editar Centro de Custo</h2>
           </div>
           <button
             onClick={onClose}
@@ -174,7 +183,7 @@ export function CreateCostCenterModal({
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="">Nenhum (Centro de custo raiz)</option>
-              {parentCostCenters.map((center) => (
+              {availableParents.map((center) => (
                 <option key={center.id} value={center.id}>
                   {center.path} - {center.name}
                 </option>
@@ -274,7 +283,7 @@ export function CreateCostCenterModal({
               ) : (
                 <Save className="w-4 h-4" />
               )}
-              <span>{isSubmitting ? 'Salvando...' : 'Salvar Centro de Custo'}</span>
+              <span>{isSubmitting ? 'Salvando...' : 'Salvar Alterações'}</span>
             </button>
           </div>
         </form>
