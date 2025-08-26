@@ -33,6 +33,8 @@ export type Database = {
           created_at: string;
           updated_at: string;
           created_by: string | null;
+          business_group_id: string | null;
+          joined_group_at: string | null;
         };
         Insert: {
           id?: string;
@@ -51,6 +53,8 @@ export type Database = {
           responsavel?: string | null;
           observacoes?: string | null;
           created_by?: string | null;
+          business_group_id?: string | null;
+          joined_group_at?: string | null;
         };
         Update: {
           id?: string;
@@ -69,6 +73,96 @@ export type Database = {
           responsavel?: string | null;
           observacoes?: string | null;
           updated_at?: string;
+          business_group_id?: string | null;
+          joined_group_at?: string | null;
+        };
+      };
+      business_groups: {
+        Row: {
+          id: string;
+          name: string;
+          code: string;
+          description: string | null;
+          headquarters_address: string | null;
+          headquarters_city: string | null;
+          headquarters_state: string | null;
+          headquarters_country: string | null;
+          main_cnpj: string | null;
+          website: string | null;
+          phone: string | null;
+          email: string | null;
+          status: 'active' | 'inactive' | 'dissolved';
+          total_companies: number;
+          total_revenue: number;
+          created_at: string;
+          updated_at: string;
+          created_by: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          code: string;
+          description?: string | null;
+          headquarters_address?: string | null;
+          headquarters_city?: string | null;
+          headquarters_state?: string | null;
+          headquarters_country?: string | null;
+          main_cnpj?: string | null;
+          website?: string | null;
+          phone?: string | null;
+          email?: string | null;
+          status?: 'active' | 'inactive' | 'dissolved';
+          total_companies?: number;
+          total_revenue?: number;
+          created_by: string;
+        };
+        Update: {
+          name?: string;
+          code?: string;
+          description?: string | null;
+          headquarters_address?: string | null;
+          headquarters_city?: string | null;
+          headquarters_state?: string | null;
+          headquarters_country?: string | null;
+          main_cnpj?: string | null;
+          website?: string | null;
+          phone?: string | null;
+          email?: string | null;
+          status?: 'active' | 'inactive' | 'dissolved';
+          total_companies?: number;
+          total_revenue?: number;
+          updated_at?: string;
+        };
+      };
+      business_group_memberships: {
+        Row: {
+          id: string;
+          business_group_id: string;
+          company_id: string;
+          action: 'joined' | 'left' | 'transferred_from' | 'transferred_to';
+          previous_group_id: string | null;
+          effective_date: string;
+          reason: string | null;
+          created_by: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          business_group_id: string;
+          company_id: string;
+          action: 'joined' | 'left' | 'transferred_from' | 'transferred_to';
+          previous_group_id?: string | null;
+          effective_date?: string;
+          reason?: string | null;
+          created_by: string;
+        };
+        Update: {
+          business_group_id?: string;
+          company_id?: string;
+          action?: 'joined' | 'left' | 'transferred_from' | 'transferred_to';
+          previous_group_id?: string | null;
+          effective_date?: string;
+          reason?: string | null;
         };
       };
       cost_centers: {
@@ -528,8 +622,6 @@ export type Database = {
           updated_at?: string;
         };
       };
-    };
-  };
       labor_budget: {
         Row: {
           id: string;
@@ -577,59 +669,6 @@ export type Database = {
           updated_at?: string;
         };
       };
-
-      cost_centers: {
-        Row: {
-          id: string;
-          name: string;
-          code: string;
-          description: string;
-          department: string;
-          manager: string;
-          parent_id: string | null;
-          level: number;
-          path: string;
-          budget: number;
-          spent: number;
-          allocated_budget: number;
-          inherited_budget: number;
-          status: 'active' | 'inactive';
-          company_id: string;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          name: string;
-          code: string;
-          description: string;
-          department: string;
-          manager: string;
-          parent_id?: string | null;
-          level: number;
-          path: string;
-          budget: number;
-          spent?: number;
-          allocated_budget: number;
-          inherited_budget?: number;
-          status?: 'active' | 'inactive';
-          company_id: string;
-        };
-        Update: {
-          name?: string;
-          code?: string;
-          description?: string;
-          department?: string;
-          manager?: string;
-          parent_id?: string | null;
-          level?: number;
-          path?: string;
-          budget?: number;
-          spent?: number;
-          allocated_budget?: number;
-          inherited_budget?: number;
-          status?: 'active' | 'inactive';
-          updated_at?: string;
-        };
-      };
+    };
+  };
 };
