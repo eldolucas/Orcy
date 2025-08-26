@@ -464,6 +464,38 @@ export type Database = {
           updated_at?: string;
         };
       };
+      expense_classifications: {
+        Row: {
+          id: string;
+          name: string;
+          type: 'variable_cost' | 'fixed_cost' | 'expense';
+          code: string;
+          description: string;
+          is_active: boolean;
+          company_id: string;
+          created_at: string;
+          updated_at: string;
+          created_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          type: 'variable_cost' | 'fixed_cost' | 'expense';
+          code: string;
+          description: string;
+          is_active?: boolean;
+          company_id: string;
+          created_by?: string | null;
+        };
+        Update: {
+          name?: string;
+          type?: 'variable_cost' | 'fixed_cost' | 'expense';
+          code?: string;
+          description?: string;
+          is_active?: boolean;
+          updated_at?: string;
+        };
+      };
     };
   };
       labor_budget: {

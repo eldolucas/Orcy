@@ -41,9 +41,14 @@ export function ExpenseClassificationForm({
         name: '',
         type: 'expense',
         code: '',
-        description: '',
-        isActive: true
-      });
+      updateExpenseClassification(classificationToEdit.id, classificationData)
+        .then(() => {
+          setClassificationToEdit(null);
+          setShowCreateModal(false);
+        })
+        .catch(() => {
+          // Error is handled in the hook and displayed in the UI
+        });
     }
     setErrors({});
   }, [initialData, isOpen]);
@@ -62,13 +67,21 @@ export function ExpenseClassificationForm({
 
     if (Object.keys(newErrors).length === 0) {
       onSave(formData);
-      onClose();
-    }
+    addExpenseClassification(classificationData)
+      .then(() => {
+        setShowCreateModal(false);
+      })
+      .catch(() => {
+        // Error is handled in the hook and displayed in the UI
+      });
   };
 
   const isEditing = !!initialData;
   const modalTitle = isEditing ? 'Editar Classificação de Gasto' : 'Nova Classificação de Gasto';
-  const submitButtonText = isEditing ? 'Salvar Alterações' : 'Criar Classificação';
+      deleteExpenseClassification(id)
+        .catch(() => {
+          // Error is handled in the hook and displayed in the UI
+        });
 
   if (!isOpen) return null;
 

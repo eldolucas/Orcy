@@ -23,8 +23,13 @@ export function ExpenseClassificationsPage() {
   const [classificationToEdit, setClassificationToEdit] = useState<ExpenseClassification | null>(null);
 
   const handleCreateClassification = (classificationData: any) => {
-    addExpenseClassification(classificationData);
-    setShowCreateModal(false);
+    addExpenseClassification(classificationData)
+      .then(() => {
+        setShowCreateModal(false);
+      })
+      .catch(() => {
+        // Error is handled in the hook and displayed in the UI
+      });
   };
 
   const handleEditClassification = (classification: ExpenseClassification) => {
@@ -34,15 +39,23 @@ export function ExpenseClassificationsPage() {
 
   const handleUpdateClassification = (classificationData: any) => {
     if (classificationToEdit) {
-      updateExpenseClassification(classificationToEdit.id, classificationData);
-      setClassificationToEdit(null);
-      setShowCreateModal(false);
+      updateExpenseClassification(classificationToEdit.id, classificationData)
+        .then(() => {
+          setClassificationToEdit(null);
+          setShowCreateModal(false);
+        })
+        .catch(() => {
+          // Error is handled in the hook and displayed in the UI
+        });
     }
   };
 
   const handleDeleteClassification = (id: string) => {
     if (window.confirm('Tem certeza que deseja excluir esta classificação de gasto? Esta ação não pode ser desfeita.')) {
-      deleteExpenseClassification(id);
+      deleteExpenseClassification(id)
+        .catch(() => {
+          // Error is handled in the hook and displayed in the UI
+        });
     }
   };
 
