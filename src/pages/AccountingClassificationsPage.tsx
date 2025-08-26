@@ -23,8 +23,13 @@ export function AccountingClassificationsPage() {
   const [classificationToEdit, setClassificationToEdit] = useState<AccountingClassification | null>(null);
 
   const handleCreateClassification = (classificationData: any) => {
-    addAccountingClassification(classificationData);
-    setShowCreateModal(false);
+    addAccountingClassification(classificationData)
+      .then(() => {
+        setShowCreateModal(false);
+      })
+      .catch(() => {
+        // Error is handled in the hook and displayed in the UI
+      });
   };
 
   const handleEditClassification = (classification: AccountingClassification) => {
@@ -34,15 +39,23 @@ export function AccountingClassificationsPage() {
 
   const handleUpdateClassification = (classificationData: any) => {
     if (classificationToEdit) {
-      updateAccountingClassification(classificationToEdit.id, classificationData);
-      setClassificationToEdit(null);
-      setShowCreateModal(false);
+      updateAccountingClassification(classificationToEdit.id, classificationData)
+        .then(() => {
+          setClassificationToEdit(null);
+          setShowCreateModal(false);
+        })
+        .catch(() => {
+          // Error is handled in the hook and displayed in the UI
+        });
     }
   };
 
   const handleDeleteClassification = (id: string) => {
     if (window.confirm('Tem certeza que deseja excluir esta classificação contábil? Esta ação não pode ser desfeita.')) {
-      deleteAccountingClassification(id);
+      deleteAccountingClassification(id)
+        .catch(() => {
+          // Error is handled in the hook and displayed in the UI
+        });
     }
   };
 
