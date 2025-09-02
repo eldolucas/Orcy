@@ -103,7 +103,7 @@ export function LoginPage() {
 
           {/* Demo Credentials */}
           <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-            <h3 className="text-sm font-medium text-blue-700 mb-2">Credenciais de Demonstração</h3>
+            <h3 className="text-sm font-medium text-blue-700 mb-2">Credenciais de Demonstração (Auto-criação)</h3>
             <div className="space-y-2 text-xs text-blue-600">
               <div>
                 <strong>Administrador:</strong><br />
@@ -122,7 +122,7 @@ export function LoginPage() {
               </div>
             </div>
             <p className="text-xs text-blue-500 mt-2">
-              <strong>Nota:</strong> Se as credenciais acima não funcionarem, você precisa criar os usuários no painel do Supabase primeiro.
+              <strong>Nota:</strong> Os usuários de demonstração serão criados automaticamente no primeiro login.
             </p>
           </div>
         </div>

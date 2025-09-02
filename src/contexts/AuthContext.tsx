@@ -203,12 +203,68 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     
     try {
+      // Check if this is a demo credential that needs user creation
+      const demoCredentials = [
+        { email: 'admin@empresa.com', password: 'admin123' },
+        { email: 'gestor@empresa.com', password: 'gestor123' },
+        { email: 'usuario@empresa.com', password: 'usuario123' }
+      ];
+      
+      const isDemoCredential = demoCredentials.some(
+        cred => cred.email === email && cred.password === password
+      );
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
 
       if (error) {
+        if (isDemoCredential && error.message === 'Invalid login credentials') {
+          // Try to sign up the demo user
+          console.log('Demo user not found, attempting to create:', email);
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              emailRedirectTo: undefined // Disable email confirmation for demo
+            }
+          });
+
+          if (signUpError) {
+            console.error('Sign up error:', signUpError);
+            setIsLoading(false);
+            return false;
+          }
+
+          if (signUpData.user) {
+            // Create profile for the new demo user
+            await createDemoProfile(signUpData.user.id, email);
+            
+            // Try to sign in again
+            const { data: retryData, error: retryError } = await supabase.auth.signInWithPassword({
+              email,
+              password
+            });
+
+            if (retryError) {
+              console.error('Retry login error:', retryError);
+              setIsLoading(false);
+              return false;
+            }
+
+            if (retryData.user) {
+              const userData = await fetchUserProfile(retryData.user);
+              if (userData) {
+                setUser(userData);
+                await setActiveCompanyFromUser(userData);
+                setIsLoading(false);
+                return true;
+              }
+            }
+          }
+        }
+        
         console.error('Login error:', error);
         setIsLoading(false);
         return false;
@@ -243,6 +299,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // State cleanup is handled by the auth state change listener
     } catch (err) {
       console.error('Logout error:', err);
+    }
+  };
+
+  // Function to create demo profile
+  const createDemoProfile = async (userId: string, email: string) => {
+    try {
+      let profileData;
+      
+      if (email === 'admin@empresa.com') {
+        profileData = {
+          id: userId,
+          name: 'João Silva',
+          role: 'admin',
+          department: 'TI',
+          company_id: '550e8400-e29b-41d4-a716-446655440001',
+          companies: ['550e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440002', '550e8400-e29b-41d4-a716-446655440003']
+        };
+      } else if (email === 'gestor@empresa.com') {
+        profileData = {
+          id: userId,
+          name: 'Maria Santos',
+          role: 'manager',
+          department: 'Financeiro',
+          company_id: '550e8400-e29b-41d4-a716-446655440001',
+          companies: ['550e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440002']
+        };
+      } else if (email === 'usuario@empresa.com') {
+        profileData = {
+          id: userId,
+          name: 'Carlos Oliveira',
+          role: 'user',
+          department: 'Operações',
+          company_id: '550e8400-e29b-41d4-a716-446655440001',
+          companies: ['550e8400-e29b-41d4-a716-446655440001']
+        };
+      }
+
+      if (profileData) {
+        const { error } = await supabase
+          .from('profiles')
+          .insert(profileData);
+
+        if (error) {
+          console.error('Error creating demo profile:', error);
+        } else {
+          console.log('Demo profile created successfully for:', email);
+        }
+      }
+    } catch (err) {
+      console.error('Error in createDemoProfile:', err);
     }
   };
 
