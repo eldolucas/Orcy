@@ -103,9 +103,26 @@ export function LoginPage() {
 
           {/* Demo Credentials */}
           <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-            <h3 className="text-sm font-medium text-blue-700 mb-2">Primeiro Acesso?</h3>
-            <p className="text-xs text-blue-600">
-              Entre em contato com o administrador do sistema para criar sua conta de acesso.
+            <h3 className="text-sm font-medium text-blue-700 mb-2">Credenciais de Demonstração</h3>
+            <div className="space-y-2 text-xs text-blue-600">
+              <div>
+                <strong>Administrador:</strong><br />
+                Email: admin@empresa.com<br />
+                Senha: admin123
+              </div>
+              <div>
+                <strong>Gestor:</strong><br />
+                Email: gestor@empresa.com<br />
+                Senha: gestor123
+              </div>
+              <div>
+                <strong>Usuário:</strong><br />
+                Email: usuario@empresa.com<br />
+                Senha: usuario123
+              </div>
+            </div>
+            <p className="text-xs text-blue-500 mt-2">
+              <strong>Nota:</strong> Se as credenciais acima não funcionarem, você precisa criar os usuários no painel do Supabase primeiro.
             </p>
           </div>
         </div>
