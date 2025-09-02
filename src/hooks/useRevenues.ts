@@ -106,7 +106,11 @@ export function useRevenues() {
       
       return revenue;
     } catch (err) {
-      console.error('Erro ao adicionar receita:', err);
+      console.error('Erro detalhado ao adicionar receita:', err);
+      console.error('Dados enviados:', {
+        ...mapRevenueToSupabase(newRevenue),
+        company_id: activeCompany?.id
+      });
       setError('Erro ao adicionar receita. Por favor, tente novamente.');
       throw err;
     }

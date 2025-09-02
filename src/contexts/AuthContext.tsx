@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { User as AuthUser, Session } from '@supabase/supabase-js';
+import { supabase } from '../lib/supabase';
 import { User } from '../types';
 
 interface CompanyInfo {
@@ -18,44 +20,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock users for demo
-const mockUsers: User[] = [
-  {
-    id: '550e8400-e29b-41d4-a716-446655440101',
-    email: 'admin@empresa.com',
-    name: 'João Silva',
-    role: 'admin',
-    department: 'TI',
-    companyId: '550e8400-e29b-41d4-a716-446655440001',
-    companies: ['550e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440002'],
-    avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
-    createdAt: '2023-01-01'
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440102',
-    email: 'gestor@empresa.com',
-    name: 'Maria Santos',
-    role: 'manager',
-    department: 'Financeiro',
-    companyId: '550e8400-e29b-41d4-a716-446655440001',
-    companies: ['550e8400-e29b-41d4-a716-446655440001'],
-    avatar: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
-    createdAt: '2023-01-01'
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440103',
-    email: 'usuario@empresa.com',
-    name: 'Pedro Costa',
-    role: 'user',
-    department: 'Marketing',
-    companyId: '550e8400-e29b-41d4-a716-446655440002',
-    companies: ['550e8400-e29b-41d4-a716-446655440002'],
-    avatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=2',
-    createdAt: '2023-01-01'
-  }
-];
-
-// Mock companies for demo
+// Mock companies for demo (these will be replaced with real data from Supabase)
 const mockCompanies: CompanyInfo[] = [
   {
     id: '550e8400-e29b-41d4-a716-446655440001',
@@ -77,89 +42,208 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userCompanies, setUserCompanies] = useState<CompanyInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    // Check for stored user session
-    const storedUser = localStorage.getItem('user');
-    const storedCompanyId = localStorage.getItem('activeCompanyId');
-    
-    if (storedUser) {
-      const parsedUser = JSON.parse(storedUser);
-      setUser(parsedUser);
-      
-      // Carregar empresas do usuário
-      if (parsedUser.companies && parsedUser.companies.length > 0) {
-        const companies = parsedUser.companies.map(companyId => 
-          mockCompanies.find(c => c.id === companyId)
-        ).filter(Boolean) as CompanyInfo[];
-        
-        setUserCompanies(companies);
-        
-        // Definir empresa ativa
-        const companyId = storedCompanyId || parsedUser.companyId || parsedUser.companies[0];
-        const company = mockCompanies.find(c => c.id === companyId);
-        if (company) {
-          setActiveCompany(company);
-          localStorage.setItem('activeCompanyId', company.id);
+  // Function to fetch user profile from profiles table
+  const fetchUserProfile = async (authUser: AuthUser): Promise<User | null> => {
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authUser.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return null;
+      }
+
+      if (!profile) {
+        console.error('No profile found for user');
+        return null;
+      }
+
+      // Convert profile data to User type
+      const userData: User = {
+        id: profile.id,
+        email: authUser.email || '',
+        name: profile.name,
+        role: profile.role,
+        department: profile.department,
+        companyId: profile.company_id,
+        companies: profile.companies || [],
+        avatar: profile.avatar,
+        createdAt: profile.created_at
+      };
+
+      return userData;
+    } catch (err) {
+      console.error('Error in fetchUserProfile:', err);
+      return null;
+    }
+  };
+
+  // Function to load user companies
+  const loadUserCompanies = async (userData: User) => {
+    try {
+      if (userData.companies && userData.companies.length > 0) {
+        const { data: companies, error } = await supabase
+          .from('companies')
+          .select('id, apelido')
+          .in('id', userData.companies);
+
+        if (error) {
+          console.error('Error fetching user companies:', error);
+          // Fallback to mock companies if real data fails
+          const companies = userData.companies.map(companyId => 
+            mockCompanies.find(c => c.id === companyId)
+          ).filter(Boolean) as CompanyInfo[];
+          return companies;
         }
+
+        return companies?.map(company => ({
+          id: company.id,
+          name: company.apelido
+        })) || [];
+      }
+      return [];
+    } catch (err) {
+      console.error('Error loading user companies:', err);
+      return [];
+    }
+  };
+
+  // Function to set active company
+  const setActiveCompanyFromUser = async (userData: User) => {
+    const companies = await loadUserCompanies(userData);
+    setUserCompanies(companies);
+
+    // Set active company
+    const storedCompanyId = localStorage.getItem('activeCompanyId');
+    const companyId = storedCompanyId || userData.companyId || userData.companies?.[0];
+    
+    if (companyId) {
+      const company = companies.find(c => c.id === companyId) || 
+                    mockCompanies.find(c => c.id === companyId);
+      if (company) {
+        setActiveCompany(company);
+        localStorage.setItem('activeCompanyId', company.id);
       }
     }
-    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    // Get initial session
+    const getInitialSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error getting session:', error);
+          setIsLoading(false);
+          return;
+        }
+
+        if (session?.user) {
+          const userData = await fetchUserProfile(session.user);
+          if (userData) {
+            setUser(userData);
+            await setActiveCompanyFromUser(userData);
+          }
+        }
+      } catch (err) {
+        console.error('Error in getInitialSession:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    getInitialSession();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.email);
+        
+        if (event === 'SIGNED_IN' && session?.user) {
+          const userData = await fetchUserProfile(session.user);
+          if (userData) {
+            setUser(userData);
+            await setActiveCompanyFromUser(userData);
+          }
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null);
+          setActiveCompany(null);
+          setUserCompanies([]);
+          localStorage.removeItem('activeCompanyId');
+        }
+        
+        setIsLoading(false);
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const switchCompany = (companyId: string) => {
-    const company = mockCompanies.find(c => c.id === companyId);
+    const company = userCompanies.find(c => c.id === companyId) || 
+                   mockCompanies.find(c => c.id === companyId);
+    
     if (company && user && user.companies?.includes(companyId)) {
       setActiveCompany(company);
       localStorage.setItem('activeCompanyId', company.id);
       
-      // Atualizar o usuário com a nova empresa ativa
+      // Update user with new active company
       const updatedUser = { ...user, companyId };
       setUser(updatedUser);
-      localStorage.setItem('user', JSON.stringify(updatedUser));
     }
   };
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const foundUser = mockUsers.find(u => u.email === email);
-    if (foundUser && password === '123456') {
-      // Carregar empresas do usuário
-      if (foundUser.companies && foundUser.companies.length > 0) {
-        const companies = foundUser.companies.map(companyId => 
-          mockCompanies.find(c => c.id === companyId)
-        ).filter(Boolean) as CompanyInfo[];
-        
-        setUserCompanies(companies);
-        
-        // Definir empresa ativa
-        const companyId = foundUser.companyId || foundUser.companies[0];
-        const company = mockCompanies.find(c => c.id === companyId);
-        if (company) {
-          setActiveCompany(company);
-          localStorage.setItem('activeCompanyId', company.id);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        console.error('Login error:', error);
+        setIsLoading(false);
+        return false;
+      }
+
+      if (data.user) {
+        const userData = await fetchUserProfile(data.user);
+        if (userData) {
+          setUser(userData);
+          await setActiveCompanyFromUser(userData);
+          setIsLoading(false);
+          return true;
         }
       }
       
-      setUser(foundUser);
-      localStorage.setItem('user', JSON.stringify(foundUser));
       setIsLoading(false);
-      return true;
+      return false;
+    } catch (err) {
+      console.error('Login error:', err);
+      setIsLoading(false);
+      return false;
     }
-    
-    setIsLoading(false);
-    return false;
   };
 
-  const logout = () => {
-    setUser(null);
-    setActiveCompany(null);
-    setUserCompanies([]);
-    localStorage.removeItem('user');
-    localStorage.removeItem('activeCompanyId');
+  const logout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Logout error:', error);
+      }
+      
+      // State cleanup is handled by the auth state change listener
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
   };
 
   return (

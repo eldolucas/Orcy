@@ -92,7 +92,12 @@ export function useInsumos() {
       
       return newInsumo;
     } catch (err) {
-      console.error('Erro ao adicionar insumo:', err);
+      console.error('Erro detalhado ao adicionar insumo:', err);
+      console.error('Dados enviados:', {
+        ...mapInsumoToSupabase(insumoData),
+        company_id: activeCompany?.id,
+        created_by: user?.name || 'Usuário Atual'
+      });
       setError('Erro ao adicionar insumo. Por favor, tente novamente.');
       throw err;
     }

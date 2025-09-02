@@ -102,7 +102,11 @@ export function useExpenses() {
       
       return expense;
     } catch (err) {
-      console.error('Erro ao adicionar despesa:', err);
+      console.error('Erro detalhado ao adicionar despesa:', err);
+      console.error('Dados enviados:', {
+        ...mapExpenseToSupabase(newExpense),
+        company_id: activeCompany?.id
+      });
       setError('Erro ao adicionar despesa. Por favor, tente novamente.');
       throw err;
     }

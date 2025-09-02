@@ -102,13 +102,11 @@ export function LoginPage() {
           </form>
 
           {/* Demo Credentials */}
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-            <h3 className="text-sm font-medium text-gray-700 mb-2">Credenciais de Demonstração:</h3>
-            <div className="space-y-1 text-xs text-gray-600">
-              <p><strong>Admin:</strong> admin@empresa.com / 123456</p>
-              <p><strong>Gestor:</strong> gestor@empresa.com / 123456</p>
-              <p><strong>Usuário:</strong> usuario@empresa.com / 123456</p>
-            </div>
+          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+            <h3 className="text-sm font-medium text-blue-700 mb-2">Primeiro Acesso?</h3>
+            <p className="text-xs text-blue-600">
+              Entre em contato com o administrador do sistema para criar sua conta de acesso.
+            </p>
           </div>
         </div>
       </div>
