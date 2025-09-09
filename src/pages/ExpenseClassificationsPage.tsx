@@ -6,6 +6,7 @@ import { useExpenseClassifications } from '../hooks/useExpenseClassifications';
 import { ExpenseClassification, expenseTypeLabels } from '../types/expenseClassification';
 
 export function ExpenseClassificationsPage() {
+  const { activeCompany, isLoading: authLoading } = useAuth();
   const { 
     expenseClassifications, 
     isLoading, 
@@ -108,7 +109,12 @@ export function ExpenseClassificationsPage() {
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+          disabled={!activeCompany || authLoading}
+          className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+            activeCompany && !authLoading
+              ? 'bg-purple-600 text-white hover:bg-purple-700' 
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+          }`}
         >
           <Plus className="w-4 h-4" />
           <span>Nova Classificação</span>
