@@ -3,9 +3,11 @@ import { Plus, Search, Filter, Package, CheckCircle, XCircle, Clock, Tag } from 
 import { InsumoCard } from '../components/Insumos/InsumoCard';
 import { InsumoForm } from '../components/Insumos/InsumoForm';
 import { useInsumos } from '../hooks/useInsumos';
+import { useAuth } from '../contexts/AuthContext';
 import { Insumo, insumoTypeLabels } from '../types/insumo';
 
 export function InsumosPage() {
+  const { isLoading: authLoading, activeCompany } = useAuth();
   const { 
     insumos, 
     isLoading, 
@@ -76,7 +78,7 @@ export function InsumosPage() {
   const serviceCount = insumos.filter(i => i.type === 'service').length;
   const fundCount = insumos.filter(i => i.type === 'fund').length;
 
-  if (isLoading) {
+  if (authLoading || isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -108,7 +110,12 @@ export function InsumosPage() {
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          disabled={!activeCompany}
+          className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+            activeCompany 
+              ? 'bg-blue-600 text-white hover:bg-blue-700' 
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+          }`}
         >
           <Plus className="w-4 h-4" />
           <span>Novo Insumo</span>
