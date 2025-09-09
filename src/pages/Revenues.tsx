@@ -10,7 +10,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Revenue } from '../types';
 
 export function Revenues() {
-  const { user } = useAuth();
+  const { user, activeCompany, isLoading: authLoading } = useAuth();
   const { 
     revenues, 
     isLoading, 
@@ -185,9 +185,9 @@ export function Revenues() {
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          disabled={!activeCompany}
+          disabled={!activeCompany || authLoading}
           className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-            activeCompany 
+            activeCompany && !authLoading
               ? 'bg-green-600 text-white hover:bg-green-700' 
               : 'bg-gray-300 text-gray-500 cursor-not-allowed'
           }`}

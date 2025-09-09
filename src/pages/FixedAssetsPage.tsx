@@ -9,7 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { FixedAsset, FixedAssetFormData, assetCategoryLabels, assetStatusLabels } from '../types/fixedAsset';
 
 export function FixedAssetsPage() {
-  const { activeCompany } = useAuth();
+  const { activeCompany, isLoading: authLoading } = useAuth();
   const { 
     fixedAssets, 
     isLoading, 
@@ -159,9 +159,9 @@ export function FixedAssetsPage() {
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          disabled={!activeCompany}
+          disabled={!activeCompany || authLoading}
           className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-            activeCompany 
+            activeCompany && !authLoading
               ? 'bg-blue-600 text-white hover:bg-blue-700' 
               : 'bg-gray-300 text-gray-500 cursor-not-allowed'
           }`}

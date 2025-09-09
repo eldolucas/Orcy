@@ -14,6 +14,7 @@ type TypeFilter = 'all' | keyof typeof accountingTypeLabels;
 type StatusFilter = 'all' | 'active' | 'inactive';
 
 export function AccountingClassificationsPage() {
+  const { activeCompany, isLoading: authLoading } = useAuth();
   const {
     accountingClassifications,
     isLoading,
@@ -136,9 +137,9 @@ export function AccountingClassificationsPage() {
             setClassificationToEdit(null); // evita carregar dados antigos
             setShowCreateModal(true);
           }} 
-          disabled={!activeCompany}
+          disabled={!activeCompany || authLoading}
           className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-            activeCompany 
+            activeCompany && !authLoading
               ? 'bg-blue-600 text-white hover:bg-blue-700' 
               : 'bg-gray-300 text-gray-500 cursor-not-allowed'
           }`}
