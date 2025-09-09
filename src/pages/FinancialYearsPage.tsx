@@ -125,7 +125,12 @@ export function FinancialYearsPage() {
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          disabled={!activeCompany}
+          className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+            activeCompany 
+              ? 'bg-blue-600 text-white hover:bg-blue-700' 
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+          }`}
         >
           <Plus className="w-4 h-4" />
           <span>Novo Exercício</span>
